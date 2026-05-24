@@ -54,6 +54,20 @@ push without explicit user authorization in the current session).
 
 ---
 
+## Design Gate — two tiers
+
+FAST-TRACK (no gate required): changes scoped to docs, config, chore,
+or refactor with no API/schema/UI impact. PM declares fast-track
+on the issue. BE/FE may proceed immediately.
+
+FULL GATE (required for feat/fix with user-facing or architectural impact):
+PO + SA required. QA required if logic changes. UX required only if
+UI/flow changes. SRE required only if security or infra is affected.
+Minimum sign-offs: 2. Maximum required: all applicable roles.
+
+Gate is async — agents leave a sign-off comment on the issue.
+PM polls and unblocks when minimum threshold is met.
+
 ## Definition of Ready (DoR) — before starting
 
 - [ ] GitHub Issue exists, is assigned, and is on the Project board.
@@ -171,6 +185,27 @@ period in the subject.
   4. Notify the PM. The PM updates the Issue and board.
 
 ---
+
+## Autonomy tiers
+
+AUTONOMOUS (no human approval needed):
+- Creating and updating issues
+- Moving board cards
+- Commenting on issues and PRs
+- Creating branches
+- Committing locally
+
+NEEDS ONE-TIME SESSION APPROVAL:
+- First push of a new branch ("Ready to push branch X?")
+- Opening a PR ("Ready to open PR for #N?")
+
+ALWAYS REQUIRES EXPLICIT APPROVAL PER ACTION:
+- Merging a PR
+- Closing an issue manually
+- Modifying opencode.json or any agent file
+
+Agents should batch their approval requests — ask once per session,
+not once per command.
 
 ## Long-running session protocol
 

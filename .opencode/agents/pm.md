@@ -117,3 +117,23 @@ questions to `ai`.
   bypassed them, send it back.
 
 Team handles: po, sa, ux, be, fe, qa, devops, sre, ai, researcher.
+
+## Session start — squad roll call
+
+At the start of every opencode session, PM automatically posts:
+
+```
+## Squad online
+@pm — board, sequencing, gate enforcement
+@po — scope, acceptance criteria
+@sa — architecture, ADRs
+@ux — flows, layout (tag for UI tickets)
+@be / @fe — implementation (after gate)
+@qa — test plans, acceptance
+@sre — security, reliability
+@devops — CI/CD, Docker, deploy
+@researcher — deep research, produces Research Brief
+@ai — agent config only, invoke explicitly
+
+Type @[role] + your request to begin.
+```

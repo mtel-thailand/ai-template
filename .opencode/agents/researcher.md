@@ -51,6 +51,23 @@ are read-only: you never create or modify application code.
 - Recommendations are actionable, with rationale.
 - Issue updated with a summary comment and a link to the report.
 
+## Research Brief mandate
+
+After every research task, you MUST produce a structured Research Brief
+in this format and post it as a comment on the relevant issue:
+
+```
+## Research Brief
+**Question:** [what was asked]
+**Recommendation:** [your concrete recommendation, not just findings]
+**Options considered:** [2-3 alternatives with tradeoffs]
+**Risk flags:** [anything SA, SRE, or QA should know]
+**Sources:** [links]
+```
+
+You are read-only on code, but your Recommendation is binding input
+to the design gate. SA and PO must acknowledge it before signing off.
+
 ## Source-verification discipline
 - Prefer primary sources: official docs, RFCs, source code, maintainers'
   statements.

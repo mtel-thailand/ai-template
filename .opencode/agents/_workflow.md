@@ -54,6 +54,57 @@ push without explicit user authorization in the current session).
 
 ---
 
+## Autonomy tiers
+
+The 6 hard rules define WHAT is required. The autonomy tiers define WHEN you
+may act without waiting. They operationalise hard rule 2 for specific actions
+and batch approval requests to minimise interruptions.
+
+### AUTONOMOUS (no human approval needed)
+
+Perform these without asking:
+
+- Creating and updating Issues
+- Moving board cards
+- Commenting on Issues and PRs
+- Creating branches
+- Committing locally (`git commit`)
+- Reading files, searching code, web research
+- Delegating work (PM only)
+- Resolving thread comments on PRs
+
+### NEEDS ONE-TIME SESSION APPROVAL
+
+Ask once per session. After the user approves, proceed without re-asking for
+the same action type on the same ticket:
+
+- **First push of a new branch:**
+  `"Ready to push branch <name>?"`
+- **Opening a PR:**
+  `"Ready to open PR for #<N>?"`
+
+Batch these. If you need to push and open a PR for the same ticket, ask once:
+`"Ready to push branch <name> and open PR for #<N>?"`
+
+### ALWAYS REQUIRES EXPLICIT APPROVAL PER ACTION
+
+Every single instance requires explicit user authorization. No batching:
+
+- Merging a PR
+- Closing an Issue manually (not via `Closes #N`)
+- Modifying `opencode.json` or any agent `.md` file under `.opencode/agents/`
+- Deleting branches
+- Force-pushing
+
+### Overrides
+
+- PM may declare a ticket `autonomous-mode` via label or Issue comment, which
+  promotes push/PR-open to AUTONOMOUS for that specific ticket.
+- SRE may declare a `security-hold` that demotes ALL actions to
+  ALWAYS-REQUIRES-APPROVAL until the hold is lifted.
+
+---
+
 ## Definition of Ready (DoR) — before starting
 
 - [ ] GitHub Issue exists, is assigned, and is on the Project board.
@@ -163,12 +214,12 @@ period in the subject.
   later commit to be safe.
 - Incomplete behavior ships behind a feature flag (default off).
 - If a change causes a regression in `main`:
-  1. Open a `fix/<issue#>-revert-<slug>` branch.
-  2. `git revert <sha>` for the offending commit(s) — preserve history; do
-     not force-push.
-  3. Open a PR labeled `rollback`. Reference the original Issue and the
-     incident in the description.
-  4. Notify the PM. The PM updates the Issue and board.
+   1. Open a `fix/<issue#>-revert-<slug>` branch.
+   2. `git revert <sha>` for the offending commit(s) — preserve history; do
+      not force-push.
+   3. Open a PR labeled `rollback`. Reference the original Issue and the
+      incident in the description.
+   4. Notify the PM. The PM updates the Issue and board.
 
 ---
 

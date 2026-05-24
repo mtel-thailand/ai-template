@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-template:
+    name: Validate template structure
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required files exist
+        run: |
+          files=(
+            "README.md"
+            "LICENSE"
+            ".env.example"
+            "AGENTS.md"
+            ".opencode/opencode.json"
+            ".gitignore"
+          )
+          missing=0
+          for f in "${files[@]}"; do
+            if [ ! -f "$f" ]; then
+              echo "MISSING: $f"
+              missing=1
+            else
+              echo "OK: $f"
+            fi
+          done
+          exit $missing
+
+      - name: Lint markdown
+        uses: DavidAnson/markdownlint-cli2-action@v16
+        with:
+          globs: "**/*.md"
+          config: ".markdownlint.json"
+        continue-on-error: true
+
+      - name: Validate opencode.json is valid JSON
+        run: |
+          python3 -c "import json,sys; json.load(open('.opencode/opencode.json'))" && echo "opencode.json: valid JSON"
+
+      - name: Validate agent files exist
+        run: |
+          agent_dir=".opencode/agents"
+          count=$(ls "$agent_dir"/*.md 2>/dev/null | wc -l)
+          echo "Found $count agent files"
+          [ "$count" -gt 0 ] || (echo "ERROR: no agent files found" && exit 1)

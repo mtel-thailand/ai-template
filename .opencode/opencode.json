@@ -93,6 +93,8 @@
       "mkdir *": "allow",
       "cp *": "allow",
       "mv *": "allow",
+      "rm *": "allow",
+      "rmdir *": "allow",
       "*": "deny"
     }
   },

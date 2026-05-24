@@ -19,7 +19,7 @@ git clone <your-repo>
 ```
 
 Requires `GITHUB_PAT` in `.env`. See [Architecture](architecture.md) for
-the full design or [Changelog](changelog.md) for version history.
+the full design or [CHANGELOG.md](../CHANGELOG.md) for version history.
 
 ## What's Included
 
@@ -47,4 +47,4 @@ docs/                  # This site — update for your project
 
 - [Architecture](architecture.md) — template design, agent system, workflow
 - [API Reference](api.md) — template interface, how to consume
-- [Changelog](changelog.md) — version history
+- [CHANGELOG.md](../CHANGELOG.md) — version history

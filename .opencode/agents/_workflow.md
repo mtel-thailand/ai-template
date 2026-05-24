@@ -48,40 +48,70 @@ push without explicit user authorization in the current session).
 6. **Always document changes and update technical documents.**
    Code change → `/docs/` update (ADRs, architecture, API contracts, runbooks
    as relevant). SA writes ADRs. PO writes feature specs in `/docs/specs/`.
-   FE writes UX specs in `/docs/ux/`. DevOps writes runbooks in
+   UX writes UX specs in `/docs/ux/`. DevOps writes runbooks in
    `/docs/runbooks/`. The `docs-skip` label is the ONLY exception, and only for
    trivial changes (typos, formatting, CI tweaks with no behavior impact).
 
 ---
 
-## Design Gate — three tiers
+## Autonomy tiers
 
-### Tier 1 — Trivial (autonomous, no sign-off)
-**Scope:** docs, typos, CI config, refactors with zero behavior change. PM stamps "tier-1" and implementer proceeds.
-**Sign-off:** 0 — PM stamps "tier-1"
-**Target time:** < 5 min
+The 6 hard rules define WHAT is required. The autonomy tiers define WHEN you
+may act without waiting. They operationalise hard rule 2 for specific actions
+and batch approval requests to minimise interruptions.
 
-### Tier 2 — Standard (lightweight gate)
-**Scope:** single-vertical feature, API extension (additive), UI component change, bug fix
-**Sign-off:** PO + Tech Lead only
-**Target time:** < 30 min (async)
+### AUTONOMOUS (no human approval needed)
 
-### Tier 3 — Major (full gate)
-**Scope:** new architecture, cross-cutting change, new dependency, security boundary change
-**Sign-off:** PO + Tech Lead + Security + QA
-**Target time:** < 4 hours
-**Execution model:** Parallel — Tech Lead designs, QA writes test plan, Security writes threat model simultaneously. Broadcast from PO to all three in parallel, not serial.
+Perform these without asking:
 
-### Gate is async
-Agents leave sign-off comments on the Issue. PM polls and unblocks when required threshold is met.
+- Creating and updating Issues
+- Moving board cards
+- Commenting on Issues and PRs
+- Creating branches
+- Committing locally (`git commit`)
+- Reading files, searching code, web research
+- Delegating work (PM only)
+- Resolving thread comments on PRs
+
+### NEEDS ONE-TIME SESSION APPROVAL
+
+Ask once per session. After the user approves, proceed without re-asking for
+the same action type on the same ticket:
+
+- **First push of a new branch:**
+  `"Ready to push branch <name>?"`
+- **Opening a PR:**
+  `"Ready to open PR for #<N>?"`
+
+Batch these. If you need to push and open a PR for the same ticket, ask once:
+`"Ready to push branch <name> and open PR for #<N>?"`
+
+### ALWAYS REQUIRES EXPLICIT APPROVAL PER ACTION
+
+Every single instance requires explicit user authorization. No batching:
+
+- Merging a PR
+- Closing an Issue manually (not via `Closes #N`)
+- Modifying `opencode.json` or any agent `.md` file under `.opencode/agents/`
+- Deleting branches
+- Force-pushing
+
+### Overrides
+
+- PM may declare a ticket `autonomous-mode` via label or Issue comment, which
+  promotes push/PR-open to AUTONOMOUS for that specific ticket.
+- SRE may declare a `security-hold` that demotes ALL actions to
+  ALWAYS-REQUIRES-APPROVAL until the hold is lifted.
+
+---
 
 ## Definition of Ready (DoR) — before starting
 
 - [ ] GitHub Issue exists, is assigned, and is on the Project board.
 - [ ] Acceptance criteria are written, testable, and unambiguous.
 - [ ] Dependencies and blockers are identified and linked.
-- [ ] Design gate has passed per the three-tier gate above (PO + Tech Lead for
-      Tier 2; PO + Tech Lead + Security + QA for Tier 3).
+- [ ] Design gate has passed for implementation work (PO, SA, QA, SRE signed
+      off; UX too for user-facing changes).
 - [ ] Latest `main` is pulled and the working branch is up to date.
 - [ ] Branch is created from `main` using the correct naming convention.
 
@@ -184,35 +214,14 @@ period in the subject.
   later commit to be safe.
 - Incomplete behavior ships behind a feature flag (default off).
 - If a change causes a regression in `main`:
-  1. Open a `fix/<issue#>-revert-<slug>` branch.
-  2. `git revert <sha>` for the offending commit(s) — preserve history; do
-     not force-push.
-  3. Open a PR labeled `rollback`. Reference the original Issue and the
-     incident in the description.
-  4. Notify the PM. The PM updates the Issue and board.
+   1. Open a `fix/<issue#>-revert-<slug>` branch.
+   2. `git revert <sha>` for the offending commit(s) — preserve history; do
+      not force-push.
+   3. Open a PR labeled `rollback`. Reference the original Issue and the
+      incident in the description.
+   4. Notify the PM. The PM updates the Issue and board.
 
 ---
-
-## Autonomy tiers
-
-AUTONOMOUS (no human approval needed):
-- Creating and updating issues
-- Moving board cards
-- Commenting on issues and PRs
-- Creating branches
-- Committing locally
-
-NEEDS ONE-TIME SESSION APPROVAL:
-- First push of a new branch ("Ready to push branch X?")
-- Opening a PR ("Ready to open PR for #N?")
-
-ALWAYS REQUIRES EXPLICIT APPROVAL PER ACTION:
-- Merging a PR
-- Closing an issue manually
-- Modifying opencode.json or any agent file
-
-Agents should batch their approval requests — ask once per session,
-not once per command.
 
 ## Long-running session protocol
 

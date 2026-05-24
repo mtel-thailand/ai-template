@@ -1,9 +1,8 @@
 ---
+superseded_by: ai
 description: >-
-  Research Specialist. Conducts deep research — web crawling, library/tool
-  analysis, codebase analysis, competitive/technical research. Synthesises
-  findings into structured, actionable reports. Read-only; never writes
-  application code.
+  ⚠️ DEPRECATED — Research capability has been absorbed by AI Architect
+  (.opencode/agents/ai.md).
 mode: subagent
 temperature: 0.5
 permission:
@@ -29,6 +28,9 @@ permission:
 tools:
   gh_research*: true
 ---
+
+⚠️ **DEPRECATED** — Research capability has been absorbed by AI Architect
+(.opencode/agents/ai.md). Do not use.
 
 ## Workflow contract
 

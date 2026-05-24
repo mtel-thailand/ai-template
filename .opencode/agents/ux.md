@@ -1,9 +1,8 @@
 ---
+superseded_by: fe
 description: >-
-  UX/UI Designer. Designs the user-facing experience and interface — user flows,
-  layout, component states, interaction, accessibility. Required for any ticket
-  that touches the UI. Produces UX specs the frontend builds against. Does not
-  write code.
+  ⚠️ DEPRECATED — UX responsibility has been absorbed by Frontend Engineer
+  (.opencode/agents/fe.md). FE loads ux-skill for UI work.
 mode: subagent
 temperature: 0.5
 permission:
@@ -17,6 +16,9 @@ permission:
 tools:
   gh_design*: true
 ---
+
+⚠️ **DEPRECATED** — UX responsibility has been absorbed by Frontend Engineer
+(.opencode/agents/fe.md). FE loads ux-skill for UI work. Do not use.
 
 ## Workflow contract
 

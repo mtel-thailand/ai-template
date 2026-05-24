@@ -1,9 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  // "model": "anthropic/claude-sonnet-4-20250514",
-  // "small_model": "anthropic/claude-sonnet-4-haiku",
   "default_agent": "pm",
-  // "enabled_providers": ["anthropic"],
   "instructions": [
     "AGENTS.md",
     ".opencode/SOUL.md",
@@ -18,68 +15,50 @@
       "temperature": 0.3
     },
     "po": {
-      // "model": "anthropic/claude-sonnet-4-haiku",
+      "model": "anthropic/claude-sonnet-4-haiku",
       "temperature": 0.4
     },
     "sa": {
-      "temperature": 0.3
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "temperature": 0.2
     },
-    "ux": {
-      "temperature": 0.5
+    "tech-lead": {
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "temperature": 0.2
     },
     "be": {
+      "model": "anthropic/claude-sonnet-4-20250514",
       "temperature": 0.2
     },
     "fe": {
+      "model": "anthropic/claude-sonnet-4-20250514",
       "temperature": 0.2
     },
+    "reviewer": {
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "temperature": 0.1
+    },
     "qa": {
-      // "model": "anthropic/claude-sonnet-4-haiku",
+      "model": "anthropic/claude-sonnet-4-haiku",
+      "temperature": 0.2
+    },
+    "security": {
+      "model": "anthropic/claude-sonnet-4-haiku",
+      "temperature": 0.1
+    },
+    "sre": {
+      "model": "anthropic/claude-sonnet-4-haiku",
       "temperature": 0.2
     },
     "devops": {
-      // "model": "anthropic/claude-sonnet-4-haiku",
+      "model": "anthropic/claude-sonnet-4-haiku",
       "temperature": 0.2
     },
-    "sre": {
-      // "model": "anthropic/claude-sonnet-4-haiku",
+    "ai": {
+      "model": "anthropic/claude-sonnet-4-20250514",
       "temperature": 0.2
-    },
-    "ai": {},
-    "researcher": {
-      "temperature": 0.5
     }
   },
-  // "command": {
-  //   "build": {
-  //     "description": "Type-check and build the application",
-  //     "prompt": "Run the TypeScript compiler and then the Vite build. Run `npm run build` and report any errors or success."
-  //   },
-  //   "test": {
-  //     "description": "Run the full test suite once",
-  //     "prompt": "Run `npm test` (which runs vitest). Report pass/fail counts for each test file. If any tests fail, show the failure details."
-  //   },
-  //   "test-watch": {
-  //     "description": "Run tests in watch mode",
-  //     "prompt": "Run `npx vitest` in watch mode so tests re-run automatically on file changes."
-  //   },
-  //   "lint": {
-  //     "description": "Lint all source files",
-  //     "prompt": "Run `npm run lint` and report any lint errors. Do not auto-fix — present the errors for review."
-  //   },
-  //   "fix-lint": {
-  //     "description": "Auto-fix all auto-fixable lint issues",
-  //     "prompt": "Run `npx eslint . --fix` to auto-fix lint issues, then run `npm run lint` again to confirm the project is clean."
-  //   },
-  //   "dev": {
-  //     "description": "Start the local dev server",
-  //     "prompt": "Run `npm run dev` to start the Vite dev server. Confirm the URL (typically http://localhost:5173) for the user."
-  //   },
-  //   "new-ticket": {
-  //     "description": "Start the spec-driven workflow for a new feature ticket",
-  //     "prompt": "Walk the user through creating a new feature ticket. Ask for a one-line feature description, then guide the PM through creating a GitHub Issue with the PO filling in the description and acceptance criteria. Follow the Phase 1 workflow (PO → SA → UX → QA → SRE → gate). Do not skip the design gate."
-  //   }
-  // },
   "permission": {
     "edit": "allow",
     "bash": {
@@ -91,10 +70,25 @@
       "ls *": "allow",
       "cat *": "allow",
       "mkdir *": "allow",
-      "cp *": "allow",
-      "mv *": "allow",
-      "rm *": "allow",
-      "rmdir *": "allow",
+      "rm src/*": "allow",
+      "rm docs/*": "allow",
+      "rm *.md": "allow",
+      "rm .gitignore": "allow",
+      "rm package.json": "allow",
+      "rm tsconfig*": "allow",
+      "rm -rf node_modules": "allow",
+      "rm -rf dist": "allow",
+      "rm -rf .next": "allow",
+      "rm -rf build": "allow",
+      "rmdir *": "deny",
+      "cp src/*": "allow",
+      "cp docs/*": "allow",
+      "cp Dockerfile*": "allow",
+      "mv src/*": "allow",
+      "mv docs/*": "allow",
+      "mv Dockerfile*": "allow",
+      "chmod +x *.sh": "allow",
+      "chmod 755 *.sh": "allow",
       "*": "deny"
     }
   },
@@ -104,7 +98,7 @@
       "url": "https://api.githubcopilot.com/mcp/",
       "enabled": true,
       "headers": {
-        "Authorization": "Bearer {env:GITHUB_PAT}",
+        "Authorization": "Bearer {env:GH_PAT_PM}",
         "X-MCP-Toolsets": "context,projects,issues,labels,notifications,discussions,users,orgs,pull_requests"
       }
     },
@@ -113,8 +107,17 @@
       "url": "https://api.githubcopilot.com/mcp/",
       "enabled": true,
       "headers": {
-        "Authorization": "Bearer {env:GITHUB_PAT}",
+        "Authorization": "Bearer {env:GH_PAT_DESIGN}",
         "X-MCP-Toolsets": "context,issues,labels,repos,discussions,git"
+      }
+    },
+    "gh_tech_lead": {
+      "type": "remote",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "enabled": true,
+      "headers": {
+        "Authorization": "Bearer {env:GH_PAT_TL}",
+        "X-MCP-Toolsets": "context,issues,labels,repos,pull_requests,git"
       }
     },
     "gh_dev": {
@@ -122,8 +125,17 @@
       "url": "https://api.githubcopilot.com/mcp/",
       "enabled": true,
       "headers": {
-        "Authorization": "Bearer {env:GITHUB_PAT}",
+        "Authorization": "Bearer {env:GH_PAT_DEV}",
         "X-MCP-Toolsets": "context,issues,labels,repos,pull_requests,git,actions,gists"
+      }
+    },
+    "gh_reviewer": {
+      "type": "remote",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "enabled": true,
+      "headers": {
+        "Authorization": "Bearer {env:GH_PAT_REVIEW}",
+        "X-MCP-Toolsets": "context,issues,labels,repos,pull_requests,git"
       }
     },
     "gh_qa": {
@@ -131,7 +143,25 @@
       "url": "https://api.githubcopilot.com/mcp/",
       "enabled": true,
       "headers": {
-        "Authorization": "Bearer {env:GITHUB_PAT}",
+        "Authorization": "Bearer {env:GH_PAT_QA}",
+        "X-MCP-Toolsets": "context,issues,labels,repos,git,pull_requests,actions"
+      }
+    },
+    "gh_sec": {
+      "type": "remote",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "enabled": true,
+      "headers": {
+        "Authorization": "Bearer {env:GH_PAT_SEC}",
+        "X-MCP-Toolsets": "context,code_security,secret_protection,security_advisories,dependabot,issues,labels"
+      }
+    },
+    "gh_sre": {
+      "type": "remote",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "enabled": true,
+      "headers": {
+        "Authorization": "Bearer {env:GH_PAT_SRE}",
         "X-MCP-Toolsets": "context,issues,labels,repos,git,pull_requests,actions"
       }
     },
@@ -140,17 +170,8 @@
       "url": "https://api.githubcopilot.com/mcp/",
       "enabled": true,
       "headers": {
-        "Authorization": "Bearer {env:GITHUB_PAT}",
+        "Authorization": "Bearer {env:GH_PAT_DEVOPS}",
         "X-MCP-Toolsets": "context,actions,repos,git,pull_requests,dependabot,github_support_docs_search"
-      }
-    },
-    "gh_sre": {
-      "type": "remote",
-      "url": "https://api.githubcopilot.com/mcp/",
-      "enabled": true,
-      "headers": {
-        "Authorization": "Bearer {env:GITHUB_PAT}",
-        "X-MCP-Toolsets": "context,code_security,secret_protection,security_advisories,dependabot,issues,labels"
       }
     },
     "gh_ai": {
@@ -158,16 +179,7 @@
       "url": "https://api.githubcopilot.com/mcp/",
       "enabled": true,
       "headers": {
-        "Authorization": "Bearer {env:GITHUB_PAT}",
-        "X-MCP-Toolsets": "context,issues,labels,repos,discussions,git"
-      }
-    },
-    "gh_research": {
-      "type": "remote",
-      "url": "https://api.githubcopilot.com/mcp/",
-      "enabled": true,
-      "headers": {
-        "Authorization": "Bearer {env:GITHUB_PAT}",
+        "Authorization": "Bearer {env:GH_PAT_AI}",
         "X-MCP-Toolsets": "context,issues,labels,repos,discussions,git"
       }
     }

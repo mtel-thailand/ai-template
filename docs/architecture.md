@@ -31,33 +31,31 @@ GitHub (Issues/PRs/Board)
    │                                       │
    │  PM ─── orchestrator                  │
    │  PO ─── scope & criteria              │
-   │  SA ─── design & ADRs                 │
-   │  UX ─── flow & accessibility          │
+   │  Tech Lead ─── architecture & ADRs    │
    │  BE ─── backend impl (TDD)            │
-   │  FE ─── frontend impl (TDD)           │
+   │  FE ─── frontend + UX impl (TDD)      │
+   │  Reviewer ─── PR review, approvals    │
    │  QA ─── test plan & sign-off          │
-   │  SRE ─── security & perf              │
+   │  Security ─── threat model & vulns     │
+   │  SRE ─── reliability & perf           │
    │  DevOps ─── infra & CI/CD             │
-   │  AI ─── agent system config           │
-   │  Researcher ─── read-only deep        │
-   │                 research              │
+   │  AI ─── agent config + research       │
    └───────────────────────────────────────┘
 ```
 
-### Design Gate
+### Design Gate — three tiers
 
-Every feature follows a **hard gate** before any code is written:
+Every feature follows a **hard gate** before any code is written. The tier
+determines the required sign-offs:
 
-```
-PO writes Issue + AC
-  → SA designs architecture
-  → UX designs flows (if user-facing)
-  → QA writes test plan
-  → SRE states requirements
-  → ALL sign off
-  → BE/FE implement TDD against spec
-  → QA verifies → SRE checks → Ship
-```
+| Tier | Scope | Sign-off | Target time |
+|------|-------|----------|-------------|
+| **T1 — Trivial** | Docs, typos, CI config, refactors (zero behavior change) | PM stamps "tier-1" | < 5 min |
+| **T2 — Standard** | Single-vertical feature, API extension, UI component change, bug fix | PO + Tech Lead | < 30 min |
+| **T3 — Major** | New architecture, cross-cutting change, new dependency, security boundary | PO + Tech Lead + Security + QA | < 4 h |
+
+**T3 execution:** Parallel — Tech Lead designs, QA writes test plan, Security
+writes threat model simultaneously. PM broadcasts to all three in parallel.
 
 ## Workflow Contract
 

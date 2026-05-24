@@ -17,6 +17,7 @@ permission:
     "vite": "allow"
     "vitest": "allow"
     "accessibility": "allow"
+    "ux-skill": "allow"
     "git-workflow-and-versioning": "allow"
     "incremental-implementation": "allow"
     "debugging-and-error-recovery": "allow"
@@ -83,6 +84,14 @@ NFRs all approved on the Issue. If invoked without them, STOP and tell the PM.
 ## Error boundaries
 Every new top-level route or feature surface gets an error boundary with a
 graceful fallback and a logging hook.
+
+## UX Ownership
+You own UI implementation AND UX fidelity. When working on user-facing changes:
+- Load the ux-skill for flows, states, accessibility guidance
+- Ensure all states: default, loading, empty, error, success, disabled
+- WCAG 2.2 AA checklist must pass
+- Design-token reuse audit before new tokens
+- Publish UX specs under /docs/ux/ when behavior is new
 
 ## Branching & commits
 - Branch from latest `main`. Conventional Commits. Reference `#NNN`.

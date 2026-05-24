@@ -18,15 +18,16 @@ git clone <your-repo>
 ./.opencode/start.sh
 ```
 
-Requires `GITHUB_PAT` in `.env`. See [Architecture](architecture.md) for
-the full design or [CHANGELOG.md](../CHANGELOG.md) for version history.
+Requires per-role PATs in `.env` (see `.env.example`). See
+[Architecture](architecture.md) for the full design or
+[CHANGELOG.md](../CHANGELOG.md) for version history.
 
 ## What's Included
 
 | Area | What You Get |
 |------|--------------|
-| **Agents** | PM, PO, SA, UX, BE, FE, QA, SRE, DevOps, AI, Researcher — 11 defined roles with scoped MCP servers |
-| **Workflow** | Universal contract (6 hard rules), definition of ready/done, design gate, SCRUM-light ceremonies |
+| **Agents** | PM, PO, Tech Lead, BE, FE, Reviewer, QA, Security, SRE, DevOps, AI — 11 defined roles with scoped MCP servers and per-role PATs |
+| **Workflow** | Universal contract (6 hard rules), three-tier design gate, squad metrics tracking |
 | **Skills** | 18 domain skill packs (NestJS, Next.js, React, Docker, security, accessibility, etc.) |
 | **CI/CD** | GitHub Actions — build pipeline and docs-check workflow (expects project to add `package.json`) |
 | **Docs** | GitHub Pages-ready documentation site |
@@ -38,7 +39,7 @@ the full design or [CHANGELOG.md](../CHANGELOG.md) for version history.
 ├── opencode.json      # Platform config: agents, MCP, permissions, models
 ├── agents/            # 11 role definitions (system prompts + tool bindings)
 ├── skills/            # 18 skill packs (NestJS, React, security, etc.)
-└── start.sh           # Launches opencode with GITHUB_PAT
+└── start.sh           # Launches opencode with per-role PATs
 .github/workflows/     # CI templates (ci.yml, docs-check.yml)
 docs/                  # This site — update for your project
 ```

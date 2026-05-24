@@ -20,16 +20,19 @@ jobs:
           BASE="${{ github.event.pull_request.base.sha }}"
           HEAD="${{ github.event.pull_request.head.sha }}"
 
-          SOURCE_CHANGED=$(git diff --name-only "$BASE".."$HEAD" -- src/ | wc -l)
+          ALL_CHANGED=$(git diff --name-only "$BASE".."$HEAD")
           DOCS_CHANGED=$(git diff --name-only "$BASE".."$HEAD" -- docs/ | wc -l)
+
+          # Count files changed outside docs, .github, .opencode, and common non-source paths
+          SOURCE_CHANGED=$(echo "$ALL_CHANGED" | grep -v "^docs/" | grep -v "^\.github/" | grep -v "^\.opencode/" | grep -v "^\.gitignore" | grep -v "^\.env" | grep -v "^README" | grep -v "^LICENSE" | grep -v "^package" | grep -v "\.md$" | wc -l)
 
           HAS_SKIP_LABEL="${{ contains(github.event.pull_request.labels.*.name, 'docs-skip') }}"
 
           if [ "$SOURCE_CHANGED" -gt 0 ] && [ "$DOCS_CHANGED" -eq 0 ] && [ "$HAS_SKIP_LABEL" != "true" ]; then
             echo "❌ Source files changed but docs/ was not updated."
             echo ""
-            echo "Changed source files:"
-            git diff --name-only "$BASE".."$HEAD" -- src/
+            echo "Changed source files (excluding docs/, .github/, .opencode/):"
+            echo "$ALL_CHANGED" | grep -v "^docs/" | grep -v "^\.github/" | grep -v "^\.opencode/" | grep -v "^\.gitignore" | grep -v "^\.env" | grep -v "^README" | grep -v "^LICENSE" | grep -v "^package" | grep -v "\.md$"
             echo ""
             echo "If these changes don't require documentation updates,"
             echo "add the 'docs-skip' label to this PR."

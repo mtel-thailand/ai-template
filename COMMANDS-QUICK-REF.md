@@ -15,15 +15,15 @@ Use `@agent-name` in opencode to address a specific role.
 |---|---|
 | `@pm` | Sequencing, board, gate enforcement |
 | `@po` | Acceptance criteria, scope decisions |
-| `@sa` | Architecture questions, ADRs |
-| `@ux` | User flows, layout specs |
+| `@tech-lead` | Architecture, ADRs, technical authority |
 | `@be` | Server-side implementation |
-| `@fe` | Client-side implementation |
+| `@fe` | Client-side implementation + UX |
+| `@reviewer` | PR review, Tier 1/2 auto-approval |
 | `@qa` | Test plans, acceptance testing |
-| `@sre` | Security, reliability, performance |
+| `@security` | Threat modeling, vulnerability scanning |
+| `@sre` | Reliability, performance, incident response |
 | `@devops` | CI/CD, Docker, deployment |
-| `@ai` | Agent config, MCP, opencode itself |
-| `@researcher` | Deep research — read-only, no code changes |
+| `@ai` | Agent config, MCP, opencode itself, deep research |
 
 ## Branch naming
 ```
@@ -43,12 +43,14 @@ refactor: extract payment service
 test: add QA acceptance tests for login
 ```
 
-## The design gate
-Before any BE/FE writes code, the issue must have:
-- [ ] PO signed off on scope
-- [ ] SA signed off on architecture
-- [ ] QA signed off on test plan
-- [ ] UX signed off on flows (if user-facing)
+## The design gate (three tiers)
+Before any BE/FE writes code, the required sign-offs depend on the tier:
+
+| Tier | Scope | Required sign-offs |
+|------|-------|-------------------|
+| **T1** — Trivial | Docs, typos, CI config, refactors | PM stamps "tier-1" |
+| **T2** — Standard | Single feature, API extension, bug fix | PO + Tech Lead |
+| **T3** — Major | New architecture, new dep, security boundary | PO + Tech Lead + Security + QA |
 
 ## What agents cannot do without your explicit OK
 - Push to remote

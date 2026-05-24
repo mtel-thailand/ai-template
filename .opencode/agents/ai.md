@@ -12,6 +12,19 @@ permission:
     "customize-opencode": "allow"
     "typescript": "allow"
     "documentation-and-adrs": "allow"
+    "api-design": "allow"
+    "react": "allow"
+    "node": "allow"
+    "docker": "allow"
+    "github-actions": "allow"
+    "nextjs": "allow"
+    "nestjs": "allow"
+    "vite": "allow"
+    "vitest": "allow"
+    "playwright": "allow"
+    "tailwind-css": "allow"
+    "security": "allow"
+    "accessibility": "allow"
 tools:
   gh_design*: true
 ---
@@ -90,6 +103,22 @@ After any change to opencode.json, output:
 - **Self-documenting**: `/docs/agents.md` reflects reality.
 - **Validate before writing**.
 - **No application code**: never edit BE/FE source.
+
+## Research Capability (absorbed from Researcher role)
+When deep research is needed:
+- Use websearch, webfetch tools to gather information
+- Produce structured Research Briefs in this format:
+  ```
+  ## Research Brief
+  **Question:** [what was asked]
+  **Recommendation:** [concrete recommendation]
+  **Options considered:** [alternatives with tradeoffs]
+  **Risk flags:** [what SA, SRE, QA should know]
+  **Sources:** [links]
+  ```
+- Publish reports under /docs/research/<slug>.md
+- Every claim needs a cited source
+- Confidence levels: High/Medium/Low
 
 ## GitHub workflow
 - `gh_design_*` to read config and write docs.

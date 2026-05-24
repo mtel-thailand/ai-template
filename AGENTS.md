@@ -103,18 +103,18 @@ frontmatter.
 |---|---|---|
 | **PM** | Board, tickets, sequencing, gate & contract enforcement | `gh_pm` |
 | **PO** | Ticket desc, acceptance criteria, scope, MVP | `gh_design` |
-| **SA** | Architecture, components, data, BE/FE split, ADRs | `gh_design` |
-| **UX** | Flows, layout, states, accessibility (UI tickets) | `gh_design` |
+| **Tech Lead** | Architecture, components, data, BE/FE split, ADRs, technical authority | `gh_tech_lead` |
 | **BE** | Server-side implementation (TDD, spec-driven, gitflow) | `gh_dev` |
-| **FE** | Client-side implementation (TDD, spec-driven, gitflow) | `gh_dev` |
+| **FE** | Client-side implementation + UX fidelity (TDD, spec-driven, gitflow) | `gh_dev` |
+| **Reviewer** | Automated PR review, can approve Tier 1/2 autonomously | `gh_reviewer` |
 | **QA** | Test plan, acceptance tests, verification, regression | `gh_qa` |
-| **SRE** | Security & reliability requirements, vuln scans, perf tests | `gh_sre` |
+| **Security** | Threat modeling, vulnerability scanning, secret detection, OWASP Top 10 | `gh_sec` |
+| **SRE** | Reliability & performance, SLOs/SLIs, load testing, incident response | `gh_sre` |
 | **DevOps** | Docker, CI/CD, GitHub Pages, releases, runbooks, observability (event tracking, error logging, monitoring) | `gh_devops` |
-| **AI** | Agent system, opencode config, skills, MCP integration | `gh_ai` |
-| **Researcher** | Deep research (web, codebase, libraries) — read-only | `gh_research` |
+| **AI** | Agent system, opencode config, skills, MCP integration, deep research | `gh_ai` |
 | **Docs Writer** | User-facing documentation, in-app copy, onboarding content, error messages, release notes, help articles | `gh_design` (shares) |
 
-> **Note:** Docs Writer is a lightweight sub-role with no dedicated MCP server; it shares the `gh_design` server with PO, SA, and UX.
+> **Note:** Docs Writer is a lightweight sub-role with no dedicated MCP server; it shares the `gh_design` server with PO.
 
 Route opencode/MCP/agent-infrastructure questions to **AI** (`@ai`), not
 BE/FE.

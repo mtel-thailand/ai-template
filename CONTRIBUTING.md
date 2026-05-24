@@ -6,22 +6,31 @@
 |------|-------------|
 | PM | Sequencing, board management, gate enforcement |
 | PO | Ticket descriptions, acceptance criteria |
-| SA | Architecture decisions (ADRs in docs/architecture/) |
-| UX | Flow diagrams, layout specs (docs/ux/) |
+| Tech Lead | Architecture decisions (ADRs in docs/architecture/) |
 | BE/FE | Implementation — only after design gate passes |
+| Reviewer | PR review, can approve Tier 1/2 autonomously |
 | QA | Test plans, acceptance tests |
-| SRE | Reliability/security requirements |
+| Security | Threat modeling, vulnerability scanning |
+| SRE | Reliability, performance, incident response |
 | DevOps | CI/CD, Docker, GitHub Pages |
-| AI | Agent config, opencode.json, skills, MCP |
+| AI | Agent config, opencode.json, skills, MCP, deep research |
 
 ## Workflow in 6 steps
 
 1. Open an issue (no issue = no code)
-2. Get design gate sign-off on the issue
+2. Get design gate sign-off on the issue (see three-tier gate in _workflow.md)
 3. Branch: `feature/<issue#>-<slug>` from main
 4. Conventional Commits: `feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:`
 5. Open a PR referencing the issue (`Closes #N`)
 6. Get review + green CI before merging
+
+## Design gate (three tiers)
+
+| Tier | Scope | Sign-off | Target time |
+|------|-------|----------|-------------|
+| T1 — Trivial | Docs, typos, CI config, refactors | PM stamps "tier-1" | < 5 min |
+| T2 — Standard | Single feature, API extension, bug fix | PO + Tech Lead | < 30 min |
+| T3 — Major | New architecture, new dep, security boundary | PO + Tech Lead + Security + QA | < 4 h |
 
 ## Never
 

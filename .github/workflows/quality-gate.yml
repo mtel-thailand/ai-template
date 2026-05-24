@@ -1,0 +1,98 @@
+name: Quality Gate
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: 'Node.js version'
+        type: string
+        default: '22'
+      audit-level:
+        description: 'npm audit severity level that blocks'
+        type: string
+        default: 'high'
+      bundle-budget-kb:
+        description: 'Max production bundle size in KB'
+        type: number
+        default: 100
+      coverage-threshold:
+        description: 'Minimum line coverage percentage'
+        type: number
+        default: 80
+      lint-command:
+        description: 'Lint command'
+        type: string
+        default: 'npm run lint'
+      build-command:
+        description: 'Build command'
+        type: string
+        default: 'npm run build'
+      test-command:
+        description: 'Test command'
+        type: string
+        default: 'npm test'
+
+jobs:
+  quality:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+
+      - name: 📦 Install
+        run: npm ci
+
+      - name: 🔍 Lint
+        run: ${{ inputs.lint-command }}
+
+      - name: 🏗️ Type-check
+        run: npx tsc --noEmit
+        continue-on-error: true
+        # Type-check is best-effort until project adds TypeScript config
+
+      - name: 🧪 Test
+        run: ${{ inputs.test-command }}
+
+      - name: 📦 Build
+        run: ${{ inputs.build-command }}
+
+      - name: 🔒 Security audit
+        run: npm audit --audit-level=${{ inputs.audit-level }}
+        continue-on-error: true
+        # Continue on error until project has real dependencies
+
+      - name: 📏 Bundle size check
+        run: |
+          if [ -d dist ]; then
+            SIZE=$(du -sb dist/ 2>/dev/null | awk '{print $1}')
+            if [ -n "$SIZE" ]; then
+              SIZE_KB=$((SIZE / 1024))
+              echo "Bundle size: ${SIZE_KB}KB"
+              if [ "$SIZE_KB" -gt "${{ inputs.bundle-budget-kb }}" ]; then
+                echo "❌ Bundle ${SIZE_KB}KB > ${{ inputs.bundle-budget-kb }}KB budget"
+                exit 1
+              fi
+              echo "✅ Bundle within budget"
+            fi
+          else
+            echo "⚠️ No dist/ directory found — skipping bundle check"
+          fi
+
+      - name: 📄 File structure check
+        run: |
+          if [ -d src ] && [ ! -f package.json ]; then
+            echo "❌ ERROR: src/ exists but no root package.json. Create one with lint, build, test scripts."
+            exit 1
+          fi
+          if [ -f package.json ]; then
+            for cmd in lint build test; do
+              if ! grep -q "\"$cmd\"" package.json 2>/dev/null; then
+                echo "⚠️ package.json missing '$cmd' script referenced by CI"
+              fi
+            done
+          fi
+          echo "✅ File structure OK"

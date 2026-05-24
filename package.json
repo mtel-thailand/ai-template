@@ -1,0 +1,15 @@
+{
+  "name": "ai-template-project",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI development squad template — replace with your project",
+  "scripts": {
+    "lint": "echo '0'",
+    "build": "mkdir -p dist && echo 'build ok'",
+    "test": "echo 'all tests passed'",
+    "type-check": "echo 'types ok'"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

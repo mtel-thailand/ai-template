@@ -48,33 +48,40 @@ push without explicit user authorization in the current session).
 6. **Always document changes and update technical documents.**
    Code change → `/docs/` update (ADRs, architecture, API contracts, runbooks
    as relevant). SA writes ADRs. PO writes feature specs in `/docs/specs/`.
-   UX writes UX specs in `/docs/ux/`. DevOps writes runbooks in
+   FE writes UX specs in `/docs/ux/`. DevOps writes runbooks in
    `/docs/runbooks/`. The `docs-skip` label is the ONLY exception, and only for
    trivial changes (typos, formatting, CI tweaks with no behavior impact).
 
 ---
 
-## Design Gate — two tiers
+## Design Gate — three tiers
 
-FAST-TRACK (no gate required): changes scoped to docs, config, chore,
-or refactor with no API/schema/UI impact. PM declares fast-track
-on the issue. BE/FE may proceed immediately.
+### Tier 1 — Trivial (autonomous, no sign-off)
+**Scope:** docs, typos, CI config, refactors with zero behavior change. PM stamps "tier-1" and implementer proceeds.
+**Sign-off:** 0 — PM stamps "tier-1"
+**Target time:** < 5 min
 
-FULL GATE (required for feat/fix with user-facing or architectural impact):
-PO + SA required. QA required if logic changes. UX required only if
-UI/flow changes. SRE required only if security or infra is affected.
-Minimum sign-offs: 2. Maximum required: all applicable roles.
+### Tier 2 — Standard (lightweight gate)
+**Scope:** single-vertical feature, API extension (additive), UI component change, bug fix
+**Sign-off:** PO + Tech Lead only
+**Target time:** < 30 min (async)
 
-Gate is async — agents leave a sign-off comment on the issue.
-PM polls and unblocks when minimum threshold is met.
+### Tier 3 — Major (full gate)
+**Scope:** new architecture, cross-cutting change, new dependency, security boundary change
+**Sign-off:** PO + Tech Lead + Security + QA
+**Target time:** < 4 hours
+**Execution model:** Parallel — Tech Lead designs, QA writes test plan, Security writes threat model simultaneously. Broadcast from PO to all three in parallel, not serial.
+
+### Gate is async
+Agents leave sign-off comments on the Issue. PM polls and unblocks when required threshold is met.
 
 ## Definition of Ready (DoR) — before starting
 
 - [ ] GitHub Issue exists, is assigned, and is on the Project board.
 - [ ] Acceptance criteria are written, testable, and unambiguous.
 - [ ] Dependencies and blockers are identified and linked.
-- [ ] Design gate has passed for implementation work (PO, SA, QA, SRE signed
-      off; UX too for user-facing changes).
+- [ ] Design gate has passed per the three-tier gate above (PO + Tech Lead for
+      Tier 2; PO + Tech Lead + Security + QA for Tier 3).
 - [ ] Latest `main` is pulled and the working branch is up to date.
 - [ ] Branch is created from `main` using the correct naming convention.
 

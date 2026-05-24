@@ -21,25 +21,28 @@ The template is loaded by opencode via `opencode.json`:
 | File | Purpose |
 |------|---------|
 | `.opencode/opencode.json` | Platform bootstrap — agent definitions, MCP servers, permissions |
-| `.opencode/agents/_workflow.md` | Universal workflow contract (6 hard rules, DoR, DoD) |
+| `.opencode/agents/_workflow.md` | Universal workflow contract (6 hard rules, DoR, DoD, three-tier gate) |
 | `.opencode/agents/{role}.md` | Per-role system prompt with tool restrictions |
 | `.opencode/skills/{name}/SKILL.md` | Domain-specific instruction packs |
-| `.opencode/start.sh` | Launch script — loads `GITHUB_PAT` from `.env` |
+| `.opencode/start.sh` | Launch script — loads per-role PATs from `.env` |
 | `AGENTS.md` | Team working agreement (loaded as system instruction) |
 
 ### Agent MCP Server Mapping
 
-Each agent has a **scoped** GitHub MCP server:
+Each agent has a **scoped** GitHub MCP server with its own PAT:
 
 | Agent | MCP Server | Scope |
 |-------|-----------|-------|
 | PM | `gh_pm` | Board, notifications, PRs, projects |
-| PO, SA, UX | `gh_design` | Issues, labels, branches, files |
+| PO | `gh_design` | Issues, labels, branches, files |
+| Tech Lead | `gh_tech_lead` | Issues, PRs, branches, repos |
 | BE, FE | `gh_dev` | Code, PRs, actions, gists |
+| Reviewer | `gh_reviewer` | PRs, Issues, repos |
 | QA | `gh_qa` | Code, PRs, actions |
-| SRE | `gh_sre` | Security advisories, alerts |
+| Security | `gh_sec` | Security advisories, code scanning, secret scanning |
+| SRE | `gh_sre` | Actions, repos, PRs (reliability-focused) |
 | DevOps | `gh_devops` | Actions, deployments, alerts |
-| AI, Researcher | `gh_research` | Code search, repository browsing |
+| AI | `gh_ai` | Issues, repos, discussions, git |
 
 See `.opencode/opencode.json` for per-agent tool restrictions.
 
@@ -48,7 +51,7 @@ See `.opencode/opencode.json` for per-agent tool restrictions.
 ### As a new project starter
 
 1. Clone or fork this repository
-2. Remove `.opencode/start.sh` sample `.env` references, add your own
+2. Copy `.env.example` to `.env` and fill in per-role PATs
 3. Create a root `package.json` with `lint`, `build`, `test` scripts
    (matching `.github/workflows/ci.yml`)
 4. Add your application code under `src/` (or wherever your stack places it)

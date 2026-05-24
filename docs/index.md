@@ -47,5 +47,4 @@ docs/                  # This site — update for your project
 
 - [Architecture](architecture.md) — template design, agent system, workflow
 - [API Reference](api.md) — template interface, how to consume
-- [Research Agent](research-agent.md) — read-only troubleshooting sub-agent
 - [Changelog](changelog.md) — version history

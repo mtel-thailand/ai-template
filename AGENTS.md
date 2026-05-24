@@ -116,12 +116,6 @@ frontmatter.
 
 > **Note:** Docs Writer is a lightweight sub-role with no dedicated MCP server; it shares the `gh_design` server with PO, SA, and UX.
 
-Additional legacy subagents (not on the board, under review for deprecation):
-`code-reviewer`, `security-auditor`, `test-engineer`. See Issue #17 for the
-deprecation proposal. Deprecation blocked until QA and SRE skills defined in
-the template harden ticket (#NNN) are confirmed to cover all legacy
-responsibilities. A responsibility matrix is required before merge.
-
 Route opencode/MCP/agent-infrastructure questions to **AI** (`@ai`), not
 BE/FE.
 

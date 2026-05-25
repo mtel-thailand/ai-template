@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "AI development squad template \u2014 replace with your project",
+  "description": "AI development squad template — replace with your project",
   "scripts": {
     "lint": "echo '0'",
     "build": "mkdir -p dist && echo 'build ok'",
@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "gray-matter": "^4.0.3",
+    "lefthook": "^1.11.0",
     "zod": "^3.23.0"
   },
   "engines": {

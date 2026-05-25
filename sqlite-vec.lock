@@ -1,0 +1,36 @@
+# sqlite-vec.lock — SHA-256 records for sqlite-vec extension binary per platform (SR4)
+#
+# Format: <sha256hex>  <platform-key>
+# Lines starting with '#' are comments. Blank lines are ignored.
+#
+# Platform keys follow the pattern <os>-<arch>:
+#   darwin-arm64  (Apple Silicon, macOS)
+#   darwin-x64    (Intel, macOS)
+#   linux-x64     (x86_64, Linux)
+#   win32-x64     (x86_64, Windows)
+#   linux-arm64   (ARM64, Linux — uncommon but documented)
+#
+# Acquisition:
+# 1. Download the prebuilt sqlite-vec .so/.dylib/.dll from:
+#    https://github.com/asg017/sqlite-vec/releases/tag/v0.1.9
+# 2. Compute SHA-256: shasum -a 256 <file>
+# 3. Update the entry below for your platform.
+#
+# --- WARNING ---
+# These placeholder hashes MUST be replaced with the actual SHA-256 of the
+# downloaded extension binary for each platform before use.
+
+# darwin-arm64 (Apple Silicon)
+0000000000000000000000000000000000000000000000000000000000000000  darwin-arm64
+
+# darwin-x64 (Intel Mac)
+0000000000000000000000000000000000000000000000000000000000000000  darwin-x64
+
+# linux-x64 (x86_64 Linux)
+0000000000000000000000000000000000000000000000000000000000000000  linux-x64
+
+# win32-x64 (x86_64 Windows)
+0000000000000000000000000000000000000000000000000000000000000000  win32-x64
+
+# linux-arm64
+0000000000000000000000000000000000000000000000000000000000000000  linux-arm64

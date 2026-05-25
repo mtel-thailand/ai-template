@@ -1,0 +1,17 @@
+name: DB Guard (SR1)
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🛡️ SR1 — Verify no DB files are staged
+        run: node scripts/ci-check-db-not-staged.mjs
+        shell: bash

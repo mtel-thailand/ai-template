@@ -8,17 +8,31 @@
     "lint": "echo '0'",
     "build": "mkdir -p dist && echo 'build ok'",
     "test": "node scripts/memory-gc.test.mjs",
+    "test:vitest": "vitest run",
+    "test:vitest:watch": "vitest",
     "type-check": "echo 'types ok'",
     "memory:gc": "node scripts/memory-gc.mjs",
+    "test:patterns": "node --test scripts/memory-secret-patterns.spec.mjs",
+    "test:patterns:timing": "node --test scripts/memory-secret-patterns.timing.spec.mjs",
+    "test:patterns:all": "node --test scripts/memory-secret-patterns.spec.mjs scripts/memory-secret-patterns.timing.spec.mjs",
     "memory:gc:validate": "node scripts/memory-gc.mjs --validate-only",
-    "memory:gc:dry": "node scripts/memory-gc.mjs --dry-run"
+    "memory:gc:dry": "node scripts/memory-gc.mjs --dry-run",
+    "memory:lint": "node scripts/memory-lint.mjs",
+    "memory:ci:db-check": "node scripts/ci-check-db-not-staged.mjs"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "gray-matter": "^4.0.3",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.7",
     "lefthook": "^1.11.0",
     "zod": "^3.23.0"
   },
   "engines": {
     "node": ">=22"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.10.0",
+    "sqlite-vec": "^0.1.9"
   }
 }

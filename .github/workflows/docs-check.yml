@@ -47,3 +47,16 @@ jobs:
           else
             echo "✅ Skipped (docs-skip label applied)."
           fi
+
+  validate-memory:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: 📦 Install
+        run: npm install --no-audit --no-fund
+      - name: 🧹 Validate memory frontmatter
+        run: node scripts/memory-gc.mjs --validate-only

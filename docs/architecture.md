@@ -26,7 +26,7 @@ GitHub (Issues/PRs/Board)
    │ platform│
    └────┬────┘
         │
-   ┌────┴──────────────────────────────────┐
+   ┌────┴──────────────────────────────────────┐
    │  Agent Squad (12 roles)               │
    │                                       │
    │  PM ─── orchestrator                  │
@@ -43,6 +43,27 @@ GitHub (Issues/PRs/Board)
    │  Researcher ─── deep research, briefs │
    └───────────────────────────────────────┘
 ```
+
+### Per-role bash permission model
+
+Git and shell access are scoped per role to enforce least privilege. Only four
+agents (`@devops`, `@ai`, `@be`, `@fe`) have any bash entitlement, and even
+they cannot push to remote — that requires explicit user authorization.
+
+**Scope summary:**
+
+| Role | git read | git stage/commit | git branch/checkout/fetch | **git push** | npm/npx | docker |
+|------|----------|-----------------|--------------------------|-------------|---------|--------|
+| `@devops` | allow | allow | allow | **deny** | allow | allow |
+| `@ai` | allow | allow | allow | **deny** | none | none |
+| `@be` | allow | allow | allow | **deny** | allow | none |
+| `@fe` | allow | allow | allow | **deny** | allow | none |
+| Others | none | none | none | none | none | none |
+
+`git push *` is denied for every role. Pushes go through the GitHub API
+(`gh_*_push_files`) or manual user action. See
+ADR-0001 (`/docs/adr/0001-grant-git-access.md`) for the full matrix and design
+rationale.
 
 ### Design Gate — three tiers
 
@@ -99,14 +120,37 @@ The squad has a **shared, file-based memory vault** at `.opencode/memory/` that 
 
 See the full specification at `/docs/specs/agent-memory.md`. The research archive is at `/docs/research/agent-memory-architectures.md`.
 
+### Memory GC Enforcement
+
+The memory subsystem is enforced by `scripts/memory-gc.mjs`, a 5-phase Node.js
+ESM script that validates, budgets, evicts, and writes back memory entries.
+
+- **`npm run memory:gc`** — full GC cycle (validate → budget → evict → write).
+- **`npm run memory:gc:validate`** — validate-only mode for CI (exits 1 on failure).
+- **`npm run memory:gc:dry`** — preview mode (all phases, no destructive writes).
+
+The CI workflow (`.github/workflows/docs-check.yml`) includes a `validate-memory`
+job triggered on every PR, which runs `node scripts/memory-gc.mjs --validate-only`
+against any memory files in the working tree. Empty vault returns exit 0
+(treated as valid — e.g. fresh template clone).
+
+Key design decisions (see [ADR-0002](./adr/0002-memory-gc-script.md)):
+- 11-field strict Zod schema (`z.object({...}).strict()`) — rejects unknown fields.
+- Atomic-rename writes prevent file corruption.
+- Exit code 2 signals budget violations (distinct from schema errors at exit 1).
+- Dev dependencies only: `gray-matter` (frontmatter parsing) + `zod` (validation).
+
 ## CI/CD
 
 | Workflow | Purpose | Current Status |
 |----------|---------|---------------|
-| `ci.yml` | `npm ci` → `lint` → `build` → `test` | ❌ Fails until project adds `package.json` |
-| `docs-check.yml` | Enforces docs update when `src/` changes | ✅ No-op until source exists |
+| `ci.yml` → `quality-gate.yml` | `npm ci` → `lint` → `build` → `test` | ⚠️ `npm ci` fails until `package-lock.json` is committed |
+| `docs-check.yml` | Enforces docs update when source changes; validates memory frontmatter | ✅ Includes `validate-memory` job |
 
-New projects should create a root `package.json` with matching scripts.
+The `ci.yml` / `quality-gate.yml` workflows expect a `package-lock.json` which
+doesn't exist yet (no `npm install` has been run in CI to generate it). The
+`validate-memory` job in `docs-check.yml` uses `npm install --no-audit --no-fund`
+to work around this until the lockfile is committed (separate follow-up ticket).
 
 ## Persistence
 

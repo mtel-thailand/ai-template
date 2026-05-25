@@ -2,12 +2,20 @@
   "name": "ai-template-project",
   "version": "0.1.0",
   "private": true,
-  "description": "AI development squad template — replace with your project",
+  "type": "module",
+  "description": "AI development squad template \u2014 replace with your project",
   "scripts": {
     "lint": "echo '0'",
     "build": "mkdir -p dist && echo 'build ok'",
-    "test": "echo 'all tests passed'",
-    "type-check": "echo 'types ok'"
+    "test": "node scripts/memory-gc.test.mjs",
+    "type-check": "echo 'types ok'",
+    "memory:gc": "node scripts/memory-gc.mjs",
+    "memory:gc:validate": "node scripts/memory-gc.mjs --validate-only",
+    "memory:gc:dry": "node scripts/memory-gc.mjs --dry-run"
+  },
+  "devDependencies": {
+    "gray-matter": "^4.0.3",
+    "zod": "^3.23.0"
   },
   "engines": {
     "node": ">=22"

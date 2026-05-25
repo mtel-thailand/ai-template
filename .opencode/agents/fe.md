@@ -9,7 +9,7 @@ permission:
   skill:
     git-and-npm-hygiene: allow
 tools:
-  - gh_dev_*
+  gh_dev_*: true
 ---
 
 # Frontend Engineer

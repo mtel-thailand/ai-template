@@ -8,15 +8,15 @@ permission:
   skill:
     git-and-npm-hygiene: allow
 tools:
-  - gh_ai_*
-  - read
-  - write
-  - edit
-  - glob
-  - grep
-  - skill
-  - webfetch
-  - websearch
+  gh_ai_*: true
+  read: true
+  write: true
+  edit: true
+  glob: true
+  grep: true
+  skill: true
+  webfetch: true
+  websearch: true
 ---
 
 # AI Architect & Multi-Agent Expert

@@ -29,6 +29,7 @@ import type {
   SearchOpts,
   ReindexOpts,
   MemoryLimits,
+  Embedder,
 } from './backend.js';
 import { validatePutInput, DEFAULT_MEMORY_LIMITS } from './backend.js';
 
@@ -59,7 +60,12 @@ interface Vec0Row {
 
 // ─── Defaults ──────────────────────────────────────────────────────────────
 
-const DEFAULT_EMBED_MODEL_ID = 'Xenova/all-MiniLM-L6-v2';
+/**
+ * Sentinel written to `embed_model_id` when no Embedder was injected at
+ * construction time. Distinguishable from a real model id so audits can
+ * spot un-attributed rows.
+ */
+const UNSPECIFIED_EMBED_MODEL_ID = 'unspecified';
 const DEFAULT_EMBED_MODEL_VER = '1';
 
 // __dirname polyfill for ESM
@@ -83,19 +89,30 @@ export class SqliteVecBackend implements MemoryBackend {
   private readonly limits: MemoryLimits;
 
   /**
+   * Embedder injected at construction. When set, `put()` stamps each row's
+   * `embed_model_id` column with `embedder.modelId` so the DB faithfully
+   * records which model produced the embedding. When unset, rows receive
+   * the `UNSPECIFIED_EMBED_MODEL_ID` sentinel.
+   */
+  private readonly embedder: Embedder | undefined;
+
+  /**
    * @param dbPath         Path to the SQLite database file.
    * @param extensionPath  Optional path to the sqlite-vec loadable extension.
    *                       If omitted, vector operations are gracefully degraded
    *                       (vector search returns empty, vec0 writes skipped).
    * @param opts           Optional backend configuration.
-   *                       `opts.limits` overrides the T-12 input caps.
+   *                       `opts.limits`    overrides the T-12 input caps.
+   *                       `opts.embedder`  Embedder whose `modelId` is recorded
+   *                                        in each row's `embed_model_id`.
    */
   constructor(
     dbPath: string,
     extensionPath?: string,
-    opts?: { limits?: MemoryLimits },
+    opts?: { limits?: MemoryLimits; embedder?: Embedder },
   ) {
     this.limits = opts?.limits ?? DEFAULT_MEMORY_LIMITS;
+    this.embedder = opts?.embedder;
     this.db = new Database(dbPath);
 
     // ── PRAGMAs (C9) ──────────────────────────────────────────────────
@@ -183,7 +200,7 @@ export class SqliteVecBackend implements MemoryBackend {
           updated: entry.updated,
           last_accessed: entry.lastAccessed,
           access_count: entry.accessCount,
-          embed_model_id: DEFAULT_EMBED_MODEL_ID,
+          embed_model_id: this.embedder?.modelId ?? UNSPECIFIED_EMBED_MODEL_ID,
           embed_model_ver: DEFAULT_EMBED_MODEL_VER,
         });
 

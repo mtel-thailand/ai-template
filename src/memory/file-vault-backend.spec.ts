@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdirSync, readFileSync, existsSync, rmSync } from 'fs';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { mkdirSync, readFileSync, existsSync, rmSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { randomUUID } from 'crypto';
@@ -181,6 +181,53 @@ describe('FileVaultBackend', () => {
   describe('reindex', () => {
     it('is a no-op (resolves)', async () => {
       await expect(backend.reindex()).resolves.toBeUndefined();
+    });
+  });
+
+  // ── Atomic write (Fix 3 / #48) ─────────────────────────────
+
+  describe('atomic write', () => {
+    it('leaves no stale .tmp file in the tier directory after a successful put', async () => {
+      const entry = testEntry('atomic-ok');
+      await backend.put(entry, new Float32Array(0));
+
+      const tierDir = join(vaultDir, entry.tier);
+      const files = readdirSync(tierDir);
+      expect(files.filter((f) => f.includes('.tmp.'))).toEqual([]);
+    });
+
+    it('target file is absent when atomic write fails mid-stream', async () => {
+      const entry = testEntry('atomic-crash');
+      const targetPath = join(vaultDir, entry.tier, `${entry.name}.md`);
+
+      const spy = vi.spyOn(
+        backend as unknown as { _atomicWrite: (p: string, c: string) => void },
+        '_atomicWrite',
+      ).mockImplementationOnce(() => {
+        throw new Error('simulated mid-write crash');
+      });
+
+      await expect(backend.put(entry, new Float32Array(0)))
+        .rejects.toThrow('simulated mid-write crash');
+      expect(existsSync(targetPath)).toBe(false);
+      spy.mockRestore();
+    });
+
+    it('cleans up the .tmp file when rename fails (target path is a directory)', async () => {
+      const entry = testEntry('rename-fail');
+      const tierDir = join(vaultDir, entry.tier);
+      const targetPath = join(tierDir, `${entry.name}.md`);
+
+      // Pre-create the target path as a directory so renameSync cannot
+      // overwrite it. The atomic-write path should propagate the failure
+      // and clean up the .tmp file.
+      mkdirSync(tierDir, { recursive: true });
+      mkdirSync(targetPath);
+
+      await expect(backend.put(entry, new Float32Array(0))).rejects.toThrow();
+
+      const files = readdirSync(tierDir);
+      expect(files.filter((f) => f.includes('.tmp.'))).toEqual([]);
     });
   });
 

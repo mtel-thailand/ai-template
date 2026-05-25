@@ -11,7 +11,7 @@
  * ADR:  /docs/adr/0003-sqlite-vec-memory-backend.md
  */
 
-import { readFileSync, writeFileSync, unlinkSync, existsSync, mkdirSync, readdirSync } from 'fs';
+import { readFileSync, writeFileSync, unlinkSync, existsSync, mkdirSync, readdirSync, renameSync } from 'fs';
 import { join, resolve, sep } from 'path';
 import matter from 'gray-matter';
 import type { MemoryBackend, MemoryEntry, SearchHit, SearchOpts, ReindexOpts, MemoryLimits } from './backend.js';
@@ -56,7 +56,29 @@ export class FileVaultBackend implements MemoryBackend {
     };
 
     const md = matter.stringify(entry.body, frontmatter);
-    writeFileSync(filePath, md, 'utf-8');
+    this._atomicWrite(filePath, md);
+  }
+
+  /**
+   * Write `content` to `target` atomically: stage to `<target>.tmp.<pid>`
+   * first, then `rename` into place. Atomicity is provided by POSIX
+   * `rename(2)` (and Windows `MoveFileExW` with `MOVEFILE_REPLACE_EXISTING`),
+   * which is a single inode-level operation. A reader will therefore see
+   * either the old file, the new file, or no file — never a partial one.
+   *
+   * If the staged write or rename fails, the temp file is best-effort
+   * unlinked before re-throwing so no orphan `.tmp.<pid>` artefacts are
+   * left behind. The original error is always propagated unchanged.
+   */
+  protected _atomicWrite(target: string, content: string): void {
+    const tmp = `${target}.tmp.${process.pid}`;
+    try {
+      writeFileSync(tmp, content, 'utf-8');
+      renameSync(tmp, target);
+    } catch (err) {
+      try { if (existsSync(tmp)) unlinkSync(tmp); } catch { /* swallow */ }
+      throw err;
+    }
   }
 
   // ── get ───────────────────────────────────────────────────────────────

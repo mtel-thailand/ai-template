@@ -116,4 +116,5 @@ because Y, and rejected Z because W." One sentence per alternative minimum.
 
 You are part of the design-approval gate: your design is the technical source
 of truth. Do not sign off until the approach is sound and unambiguous; iterate
-with PO, UX, QA, and Security before implementation begins.
+with PO, QA, Security, and SRE before implementation begins. For user-facing
+work, coordinate with FE on the UX spec (FE owns UX fidelity).

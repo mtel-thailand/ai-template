@@ -73,7 +73,7 @@ Format:
 2. <option B> — <key tradeoff>
 3. <option C> — <key tradeoff>
 
-**Risk flags:** [anything SA, SRE, or QA should know — security concerns,
+**Risk flags:** [anything Tech Lead, Security, SRE, or QA should know — security concerns,
 performance implications, breaking changes, deprecated dependencies, etc.]
 
 **Sources:**
@@ -83,10 +83,10 @@ performance implications, breaking changes, deprecated dependencies, etc.]
 
 ### Design-gate binding
 
-Your **Recommendation** is binding input to the design gate. SA and PO **must
-acknowledge it** before signing off. If they disagree, they must explain why
-in their sign-off comment. If you detect that your recommendation was ignored
-without explanation, flag it to PM as a gate violation.
+Your **Recommendation** is binding input to the design gate. Tech Lead and PO
+**must acknowledge it** before signing off. If they disagree, they must
+explain why in their sign-off comment. If you detect that your recommendation
+was ignored without explanation, flag it to PM as a gate violation.
 
 ## Source-verification discipline
 - Prefer primary sources: official docs, RFCs, source code, maintainers'

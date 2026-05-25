@@ -47,10 +47,11 @@ push without explicit user authorization in the current session).
 
 6. **Always document changes and update technical documents.**
    Code change → `/docs/` update (ADRs, architecture, API contracts, runbooks
-   as relevant). SA writes ADRs. PO writes feature specs in `/docs/specs/`.
-   UX writes UX specs in `/docs/ux/`. DevOps writes runbooks in
-   `/docs/runbooks/`. The `docs-skip` label is the ONLY exception, and only for
-   trivial changes (typos, formatting, CI tweaks with no behavior impact).
+   as relevant). Tech Lead writes ADRs. PO writes feature specs in
+   `/docs/specs/`. FE writes UX specs in `/docs/ux/` (FE owns UX fidelity).
+   DevOps writes runbooks in `/docs/runbooks/`. The `docs-skip` label is the
+   ONLY exception, and only for trivial changes (typos, formatting, CI tweaks
+   with no behavior impact).
 
 ---
 
@@ -110,8 +111,9 @@ Every single instance requires explicit user authorization. No batching:
 - [ ] GitHub Issue exists, is assigned, and is on the Project board.
 - [ ] Acceptance criteria are written, testable, and unambiguous.
 - [ ] Dependencies and blockers are identified and linked.
-- [ ] Design gate has passed for implementation work (PO, SA, QA, SRE signed
-      off; UX too for user-facing changes).
+- [ ] Design gate has passed for implementation work per the three-tier model
+      in `docs/architecture.md` (T1 = PM stamp; T2 = PO + Tech Lead;
+      T3 = PO + Tech Lead + Security + QA).
 - [ ] Latest `main` is pulled and the working branch is up to date.
 - [ ] Branch is created from `main` using the correct naming convention.
 
@@ -420,8 +422,7 @@ ones before starting an autonomous session.
 
 ### §10. Cross-references
 
-- Time-box triggers in §1 supersede the older 30-min / 3-attempt language
-  that previously lived in `Escalation rules`.
+- Time-box triggers in §1 are the canonical blocker definition.
 - Single-active-ticket rule is folded into §4.
 - Hard rule 2 (never push without explicit ask) governs §6 step 5 and §8.
 - Debugging failures invoke the `debugging-and-error-recovery` skill before

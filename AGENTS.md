@@ -45,6 +45,7 @@ Full contract (DoR, DoD, handoff template, rollback, escalation):
 | `.opencode/agents/*.md` | Per-role system prompts |
 | `.opencode/skills/` | Domain skill packs |
 | `.opencode/start.sh` | Loads `GITHUB_PAT` from `.env`, then launches opencode |
+| `.opencode/memory/` | Shared agent memory vault — five tiers, strict YAML frontmatter, `[[wikilinks]]`. See `/docs/specs/agent-memory.md`. |
 | `.github/workflows/ci.yml` | Build & test pipeline (expects npm scripts that don't exist yet) |
 | `.github/workflows/docs-check.yml` | Enforces docs update when `src/` changes |
 | `docs/` | Template documentation site (GitHub Pages) |

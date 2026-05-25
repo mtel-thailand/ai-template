@@ -25,3 +25,7 @@ dist-ssr
 
 # Environment
 .env
+
+# .opencode/memory/ — session-scoped tiers are local only
+.opencode/memory/short/
+.opencode/memory/forgettable/

@@ -18,7 +18,7 @@ git clone <your-repo>
 ./.opencode/start.sh
 ```
 
-Requires per-role PATs in `.env` (see `.env.example`). See
+Requires a single `GITHUB_PAT` in `.env` (see `.env.example`). See
 [Architecture](architecture.md) for the full design or
 [CHANGELOG.md](../CHANGELOG.md) for version history.
 
@@ -26,9 +26,9 @@ Requires per-role PATs in `.env` (see `.env.example`). See
 
 | Area | What You Get |
 |------|--------------|
-| **Agents** | PM, PO, Tech Lead, BE, FE, Reviewer, QA, Security, SRE, DevOps, AI — 11 defined roles with scoped MCP servers and per-role PATs |
-| **Workflow** | Universal contract (6 hard rules), three-tier design gate, squad metrics tracking |
-| **Skills** | 18 domain skill packs (NestJS, Next.js, React, Docker, security, accessibility, etc.) |
+| **Agents** | PM, PO, Tech Lead, BE, FE, Reviewer, QA, Security, SRE, DevOps, AI, Researcher — 12 defined roles with role-scoped MCP servers (single shared `GITHUB_PAT`) |
+| **Workflow** | Universal contract (6 hard rules), three-tier design gate (T1/T2/T3), autonomy tiers, long-running session protocol |
+| **Skills** | 32 domain skill packs (NestJS, Next.js, React, Docker, security, accessibility, etc.) |
 | **CI/CD** | GitHub Actions — build pipeline and docs-check workflow (expects project to add `package.json`) |
 | **Docs** | GitHub Pages-ready documentation site |
 
@@ -37,9 +37,9 @@ Requires per-role PATs in `.env` (see `.env.example`). See
 ```
 .opencode/
 ├── opencode.json      # Platform config: agents, MCP, permissions, models
-├── agents/            # 11 role definitions (system prompts + tool bindings)
-├── skills/            # 18 skill packs (NestJS, React, security, etc.)
-└── start.sh           # Launches opencode with per-role PATs
+├── agents/            # 12 role definitions (system prompts + tool bindings)
+├── skills/            # 32 skill packs (NestJS, React, security, etc.)
+└── start.sh           # Launches opencode after loading GITHUB_PAT from .env
 .github/workflows/     # CI templates (ci.yml, docs-check.yml)
 docs/                  # This site — update for your project
 ```

@@ -262,7 +262,16 @@
         "X-MCP-Toolsets": "context,issues,labels,repos,pull_requests,git"
       }
     },
-    "gh_dev": {
+    "gh_be": {
+      "type": "remote",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "enabled": true,
+      "headers": {
+        "Authorization": "Bearer {env:GITHUB_PAT}",
+        "X-MCP-Toolsets": "context,issues,labels,repos,pull_requests,git,actions,gists"
+      }
+    },
+    "gh_fe": {
       "type": "remote",
       "url": "https://api.githubcopilot.com/mcp/",
       "enabled": true,
@@ -313,7 +322,7 @@
       "enabled": true,
       "headers": {
         "Authorization": "Bearer {env:GITHUB_PAT}",
-        "X-MCP-Toolsets": "context,actions,repos,git,pull_requests,dependabot,github_support_docs_search"
+        "X-MCP-Toolsets": "context,actions,repos,git,pull_requests,dependabot,github_support_docs_search,issues,labels"
       }
     },
     "gh_ai": {

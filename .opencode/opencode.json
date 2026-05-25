@@ -12,50 +12,51 @@
   },
   "agent": {
     "pm": {
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.3
     },
     "po": {
-      "model": "anthropic/claude-sonnet-4-haiku",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.4
     },
     "sa": {
-      "model": "anthropic/claude-sonnet-4-20250514",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.2
     },
     "tech-lead": {
-      "model": "anthropic/claude-sonnet-4-20250514",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.2
     },
     "be": {
-      "model": "anthropic/claude-sonnet-4-20250514",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.2
     },
     "fe": {
-      "model": "anthropic/claude-sonnet-4-20250514",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.2
     },
     "reviewer": {
-      "model": "anthropic/claude-sonnet-4-20250514",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.1
     },
     "qa": {
-      "model": "anthropic/claude-sonnet-4-haiku",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.2
     },
     "security": {
-      "model": "anthropic/claude-sonnet-4-haiku",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.1
     },
     "sre": {
-      "model": "anthropic/claude-sonnet-4-haiku",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.2
     },
     "devops": {
-      "model": "anthropic/claude-sonnet-4-haiku",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.2
     },
     "ai": {
-      "model": "anthropic/claude-sonnet-4-20250514",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.2
     }
   },

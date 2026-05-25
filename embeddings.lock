@@ -1,0 +1,25 @@
+# embeddings.lock — SHA-256 records for ONNX model weight files (SR3)
+#
+# Format: <sha256hex>  <filename>
+# Lines starting with '#' are comments. Blank lines are ignored.
+#
+# Acquisition: run `shasum -a 256 <onnx_file>` after downloading the model.
+# For the default model Xenova/all-MiniLM-L6-v2, the ONNX files are cached under:
+#   ~/.cache/huggingface/hub/models--Xenova--all-MiniLM-L6-v2/snapshots/<sha>/
+#
+# --- WARNING ---
+# These placeholder hashes MUST be replaced with the actual SHA-256 of the
+# downloaded model files before the embedder can be used. See Sub-task D
+# runbooks for SHA acquisition procedure.
+
+# Quantization: fp32
+# Expected file: model.onnx
+0000000000000000000000000000000000000000000000000000000000000000  model.onnx
+
+# Quantization: fp16
+# Expected file: model_fp16.onnx
+0000000000000000000000000000000000000000000000000000000000000000  model_fp16.onnx
+
+# Quantization: q8 / q4
+# Expected file: model_quantized.onnx
+0000000000000000000000000000000000000000000000000000000000000000  model_quantized.onnx

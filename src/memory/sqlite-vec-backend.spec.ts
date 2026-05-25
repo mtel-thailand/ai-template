@@ -4,7 +4,8 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import { randomUUID } from 'crypto';
 import { SqliteVecBackend } from './sqlite-vec-backend.js';
-import type { MemoryEntry, SearchOpts } from './backend.js';
+import type { MemoryEntry, SearchOpts, Embedder } from './backend.js';
+import { MemoryBackendInputError, DEFAULT_MEMORY_LIMITS } from './backend.js';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -292,6 +293,78 @@ describe('SqliteVecBackend', () => {
       const opts: SearchOpts = { query: 'Reindex', k: 5, mode: 'lexical' };
       const hits = await backend.search(opts);
       expect(hits.length).toBeGreaterThan(0);
+    });
+  });
+
+  // ── Fix 2: embed_model_id sourcing ──────────────────────────────
+
+  describe('embed_model_id sourcing (Fix 2 / #48)', () => {
+    it('writes embed_model_id from constructor-injected Embedder.modelId', async () => {
+      const mockEmbedder: Embedder = {
+        modelId: 'test-model-x',
+        dim: 384,
+        embed: async () => [],
+      };
+
+      const localPath = tempDbPath();
+      const localBackend = new SqliteVecBackend(localPath, undefined, { embedder: mockEmbedder });
+
+      try {
+        const entry = testEntry();
+        await localBackend.put(entry, randomEmbedding());
+
+        const row = localBackend.db.prepare(
+          'SELECT embed_model_id FROM entries WHERE name = ?',
+        ).get(entry.name) as { embed_model_id: string } | undefined;
+
+        expect(row).toBeDefined();
+        expect(row!.embed_model_id).toBe('test-model-x');
+      } finally {
+        localBackend.close();
+        for (const ext of ['', '-wal', '-shm']) {
+          const p = localPath + ext;
+          try { if (existsSync(p)) unlinkSync(p); } catch { /* ignore */ }
+        }
+      }
+    });
+
+    it('does not write a hardcoded model name when no embedder is injected', async () => {
+      const entry = testEntry();
+      await backend.put(entry, randomEmbedding());
+
+      const row = backend.db.prepare(
+        'SELECT embed_model_id FROM entries WHERE name = ?',
+      ).get(entry.name) as { embed_model_id: string } | undefined;
+
+      expect(row).toBeDefined();
+      expect(typeof row!.embed_model_id).toBe('string');
+      // No hardcoded production model id should leak into the DB
+      // when the backend was constructed without an Embedder.
+      expect(row!.embed_model_id).not.toBe('Xenova/all-MiniLM-L6-v2');
+    });
+  });
+
+  // ── T-12 input caps ──────────────────────────────────────────────────
+
+  describe('T-12 input caps', () => {
+    it('rejects body just over maxBodyBytes with MemoryBackendInputError', async () => {
+      const entry = testEntry({
+        body: 'x'.repeat(DEFAULT_MEMORY_LIMITS.maxBodyBytes + 1),
+      });
+      await expect(backend.put(entry, randomEmbedding())).rejects.toThrow(MemoryBackendInputError);
+    });
+
+    it('accepts body exactly at maxBodyBytes', async () => {
+      const entry = testEntry({
+        body: 'x'.repeat(DEFAULT_MEMORY_LIMITS.maxBodyBytes),
+      });
+      await expect(backend.put(entry, randomEmbedding())).resolves.toBeUndefined();
+    });
+
+    it('rejects embedding just over maxEmbeddingDim with MemoryBackendInputError', async () => {
+      const entry = testEntry();
+      const oversized = new Float32Array(DEFAULT_MEMORY_LIMITS.maxEmbeddingDim + 1);
+      await expect(backend.put(entry, oversized)).rejects.toThrow(MemoryBackendInputError);
     });
   });
 

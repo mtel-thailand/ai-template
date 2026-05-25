@@ -8,6 +8,10 @@ import {
   type SearchOpts, 
   type ReindexOpts,
   MemoryBackendBusyError,
+  MemoryBackendInputError,
+  DEFAULT_MEMORY_LIMITS,
+  validatePutInput,
+  type MemoryLimits,
 } from './backend.js';
 
 describe('backend types and exports', () => {
@@ -145,5 +149,97 @@ describe('backend types and exports', () => {
     expect(err.attempts).toBe(3);
     expect(err.delays).toEqual([50, 100, 200]);
     expect(err.retryAfterMs).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('T-12 input caps (validatePutInput)', () => {
+  function baseEntry(body: string): MemoryEntry {
+    return {
+      name: 'cap-test',
+      tier: 'mid',
+      kind: 'semantic',
+      description: 'cap test',
+      body,
+      tags: [],
+      links: [],
+      importance: 3,
+      created: '2026-01-01',
+      updated: '2026-01-01',
+      lastAccessed: '2026-01-01',
+      accessCount: 0,
+    };
+  }
+
+  it('exports DEFAULT_MEMORY_LIMITS with documented defaults (100 KB / 1024)', () => {
+    expect(DEFAULT_MEMORY_LIMITS.maxBodyBytes).toBe(102_400);
+    expect(DEFAULT_MEMORY_LIMITS.maxEmbeddingDim).toBe(1024);
+  });
+
+  it('MemoryBackendInputError is a typed Error with field discriminator', () => {
+    const err = new MemoryBackendInputError('msg', 'body');
+    expect(err).toBeInstanceOf(Error);
+    expect(err).toBeInstanceOf(MemoryBackendInputError);
+    expect(err.name).toBe('MemoryBackendInputError');
+    expect(err.field).toBe('body');
+  });
+
+  it('passes when body is just under maxBodyBytes', () => {
+    const body = 'a'.repeat(DEFAULT_MEMORY_LIMITS.maxBodyBytes - 1);
+    expect(() => validatePutInput(baseEntry(body), new Float32Array(384))).not.toThrow();
+  });
+
+  it('passes when body is exactly at maxBodyBytes', () => {
+    const body = 'a'.repeat(DEFAULT_MEMORY_LIMITS.maxBodyBytes);
+    expect(() => validatePutInput(baseEntry(body), new Float32Array(384))).not.toThrow();
+  });
+
+  it('throws MemoryBackendInputError when body is just over maxBodyBytes', () => {
+    const body = 'a'.repeat(DEFAULT_MEMORY_LIMITS.maxBodyBytes + 1);
+    let captured: unknown;
+    try {
+      validatePutInput(baseEntry(body), new Float32Array(384));
+    } catch (e) {
+      captured = e;
+    }
+    expect(captured).toBeInstanceOf(MemoryBackendInputError);
+    expect((captured as MemoryBackendInputError).field).toBe('body');
+  });
+
+  it('passes when embedding dim is just under maxEmbeddingDim', () => {
+    expect(() => validatePutInput(
+      baseEntry('ok'),
+      new Float32Array(DEFAULT_MEMORY_LIMITS.maxEmbeddingDim - 1),
+    )).not.toThrow();
+  });
+
+  it('passes when embedding dim is exactly at maxEmbeddingDim', () => {
+    expect(() => validatePutInput(
+      baseEntry('ok'),
+      new Float32Array(DEFAULT_MEMORY_LIMITS.maxEmbeddingDim),
+    )).not.toThrow();
+  });
+
+  it('throws MemoryBackendInputError when embedding dim is just over maxEmbeddingDim', () => {
+    let captured: unknown;
+    try {
+      validatePutInput(
+        baseEntry('ok'),
+        new Float32Array(DEFAULT_MEMORY_LIMITS.maxEmbeddingDim + 1),
+      );
+    } catch (e) {
+      captured = e;
+    }
+    expect(captured).toBeInstanceOf(MemoryBackendInputError);
+    expect((captured as MemoryBackendInputError).field).toBe('embedding');
+  });
+
+  it('respects custom MemoryLimits override', () => {
+    const limits: MemoryLimits = { maxBodyBytes: 10, maxEmbeddingDim: 8 };
+    expect(() => validatePutInput(baseEntry('12345'), new Float32Array(8), limits))
+      .not.toThrow();
+    expect(() => validatePutInput(baseEntry('12345678901'), new Float32Array(8), limits))
+      .toThrow(MemoryBackendInputError);
+    expect(() => validatePutInput(baseEntry('ok'), new Float32Array(9), limits))
+      .toThrow(MemoryBackendInputError);
   });
 });

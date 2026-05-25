@@ -102,3 +102,63 @@ export class MemoryBackendBusyError extends Error {
     return this.delays.reduce((a, b) => a + b, 0);
   }
 }
+
+// ─── Input limits / validation (T-12) ───────────────────────────────────────
+
+/**
+ * Caps that `MemoryBackend.put()` enforces before any persistence path.
+ *
+ * Defaults mitigate T-12 (resource exhaustion via oversized inputs) per
+ * ADR-0003. Backends accept an override via constructor opts to support
+ * deployment-specific limits.
+ */
+export interface MemoryLimits {
+  maxBodyBytes: number;
+  maxEmbeddingDim: number;
+}
+
+export const DEFAULT_MEMORY_LIMITS: Readonly<MemoryLimits> = Object.freeze({
+  maxBodyBytes: 102_400, // 100 KB
+  maxEmbeddingDim: 1024,
+});
+
+/**
+ * Typed error raised when `MemoryBackend.put()` receives an entry whose
+ * body or embedding exceeds the configured caps. `field` identifies the
+ * specific offender so callers can act on the cause.
+ */
+export class MemoryBackendInputError extends Error {
+  public readonly name = 'MemoryBackendInputError';
+
+  constructor(
+    message: string,
+    public readonly field: 'body' | 'embedding',
+  ) {
+    super(message);
+    Object.setPrototypeOf(this, MemoryBackendInputError.prototype);
+  }
+}
+
+/**
+ * Validate `put()` input against `MemoryLimits`. Backends must call this
+ * before any persistence path so oversized entries never reach storage.
+ */
+export function validatePutInput(
+  entry: MemoryEntry,
+  embedding: Float32Array,
+  limits: MemoryLimits = DEFAULT_MEMORY_LIMITS,
+): void {
+  const bodyBytes = Buffer.byteLength(entry.body, 'utf-8');
+  if (bodyBytes > limits.maxBodyBytes) {
+    throw new MemoryBackendInputError(
+      `body exceeds maxBodyBytes (${bodyBytes} > ${limits.maxBodyBytes})`,
+      'body',
+    );
+  }
+  if (embedding.length > limits.maxEmbeddingDim) {
+    throw new MemoryBackendInputError(
+      `embedding exceeds maxEmbeddingDim (${embedding.length} > ${limits.maxEmbeddingDim})`,
+      'embedding',
+    );
+  }
+}

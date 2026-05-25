@@ -11,10 +11,11 @@
  * ADR:  /docs/adr/0003-sqlite-vec-memory-backend.md
  */
 
-import { readFileSync, writeFileSync, unlinkSync, existsSync, mkdirSync, readdirSync } from 'fs';
+import { readFileSync, writeFileSync, unlinkSync, existsSync, mkdirSync, readdirSync, renameSync } from 'fs';
 import { join, resolve, sep } from 'path';
 import matter from 'gray-matter';
-import type { MemoryBackend, MemoryEntry, SearchHit, SearchOpts, ReindexOpts } from './backend.js';
+import type { MemoryBackend, MemoryEntry, SearchHit, SearchOpts, ReindexOpts, MemoryLimits } from './backend.js';
+import { validatePutInput, DEFAULT_MEMORY_LIMITS } from './backend.js';
 
 // ─── Backend ────────────────────────────────────────────────────────────────
 
@@ -22,12 +23,18 @@ export class FileVaultBackend implements MemoryBackend {
   /**
    * @param vaultDir  Root directory of the vault (e.g., `.opencode/memory/`).
    *                  Expected to contain subdirectories per tier.
+   * @param limits    T-12 input caps enforced by `put()`. Defaults to
+   *                  `DEFAULT_MEMORY_LIMITS` (100 KB body, 1024-dim embedding).
    */
-  constructor(private readonly vaultDir: string) {}
+  constructor(
+    private readonly vaultDir: string,
+    private readonly limits: MemoryLimits = DEFAULT_MEMORY_LIMITS,
+  ) {}
 
   // ── put ───────────────────────────────────────────────────────────────
 
   async put(entry: MemoryEntry, _embedding: Float32Array): Promise<void> {
+    validatePutInput(entry, _embedding, this.limits);
     const filePath = this._filePath(entry.name, entry.tier);
     const dir = resolve(filePath, '..');
     if (!existsSync(dir)) {
@@ -49,7 +56,29 @@ export class FileVaultBackend implements MemoryBackend {
     };
 
     const md = matter.stringify(entry.body, frontmatter);
-    writeFileSync(filePath, md, 'utf-8');
+    this._atomicWrite(filePath, md);
+  }
+
+  /**
+   * Write `content` to `target` atomically: stage to `<target>.tmp.<pid>`
+   * first, then `rename` into place. Atomicity is provided by POSIX
+   * `rename(2)` (and Windows `MoveFileExW` with `MOVEFILE_REPLACE_EXISTING`),
+   * which is a single inode-level operation. A reader will therefore see
+   * either the old file, the new file, or no file — never a partial one.
+   *
+   * If the staged write or rename fails, the temp file is best-effort
+   * unlinked before re-throwing so no orphan `.tmp.<pid>` artefacts are
+   * left behind. The original error is always propagated unchanged.
+   */
+  protected _atomicWrite(target: string, content: string): void {
+    const tmp = `${target}.tmp.${process.pid}`;
+    try {
+      writeFileSync(tmp, content, 'utf-8');
+      renameSync(tmp, target);
+    } catch (err) {
+      try { if (existsSync(tmp)) unlinkSync(tmp); } catch { /* swallow */ }
+      throw err;
+    }
   }
 
   // ── get ───────────────────────────────────────────────────────────────

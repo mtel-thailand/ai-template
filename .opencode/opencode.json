@@ -100,6 +100,7 @@
           "git push --force *": "deny",
           "git remote add *": "deny",
           "git config --global *": "deny",
+          "docker *": "allow",
           "git *": "allow",
           "npm run *": "allow",
           "npm test*": "allow",

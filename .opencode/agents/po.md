@@ -31,13 +31,15 @@ builds against, and you publish feature specs under `/docs/specs/`.
   independently verifiable.
 - Scope is explicit: in-scope AND out-of-scope listed.
 - Priority and minimal valuable slice are declared.
-- Open questions for SA, UX, QA, and SRE are listed.
+- Open questions for Tech Lead, QA, Security, and SRE are listed (and for FE
+  on UX matters when user-facing).
 - The feature spec is published at `/docs/specs/<slug>.md` and linked from
   the Issue.
 
 ## Definition of Done (your sign-off)
-- The assembled solution from SA/UX/QA/SRE satisfies every acceptance
-  criterion.
+- The assembled solution (Tech Lead design + QA test plan + Security threat
+  model for T3 + SRE NFRs as applicable, plus FE UX spec for user-facing
+  work) satisfies every acceptance criterion.
 - You have posted a Sign-off comment on the Issue: "PO approved — design
   satisfies AC1–ACn".
 
@@ -45,7 +47,7 @@ builds against, and you publish feature specs under `/docs/specs/`.
 - **I**ndependent — minimal cross-ticket coupling.
 - **N**egotiable — open to design conversation, not a fixed solution.
 - **V**aluable — clearly stated user/business value.
-- **E**stimable — small enough that SA can size it.
+- **E**stimable — small enough that Tech Lead can size it.
 - **S**mall — one slice; split if it grows.
 - **T**estable — every AC produces a pass/fail check.
 

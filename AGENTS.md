@@ -94,30 +94,14 @@ frontmatter.
 - Bug reports: clear title, reproduction steps, expected vs. actual, severity
   label.
 - The squad is spec-driven & TDD. Implementation is gated behind design
-  sign-off (PO, SA, QA, SRE all must agree; UX too for user-facing work).
+  sign-off per the three-tier model in `docs/architecture.md`.
 - BE/FE must not write code until the design gate has passed.
 
-## Agent roles at a glance
+## Agent roles
 
-| Agent | Owns | MCP server |
-|---|---|---|
-| **PM** | Board, tickets, sequencing, gate & contract enforcement | `gh_pm` |
-| **PO** | Ticket desc, acceptance criteria, scope, MVP | `gh_design` |
-| **Tech Lead** | Architecture, components, data, BE/FE split, ADRs, technical authority | `gh_tech_lead` |
-| **BE** | Server-side implementation (TDD, spec-driven, gitflow) | `gh_dev` |
-| **FE** | Client-side implementation + UX fidelity (TDD, spec-driven, gitflow) | `gh_dev` |
-| **Reviewer** | Automated PR review, can approve Tier 1/2 autonomously | `gh_reviewer` |
-| **QA** | Test plan, acceptance tests, verification, regression | `gh_qa` |
-| **Security** | Threat modeling, vulnerability scanning, secret detection, OWASP Top 10 | `gh_sec` |
-| **SRE** | Reliability & performance, SLOs/SLIs, load testing, incident response | `gh_sre` |
-| **DevOps** | Docker, CI/CD, GitHub Pages, releases, runbooks, observability (event tracking, error logging, monitoring) | `gh_devops` |
-| **AI** | Agent system, opencode config, skills, MCP integration, deep research | `gh_ai` |
-| **Docs Writer** | User-facing documentation, in-app copy, onboarding content, error messages, release notes, help articles | `gh_design` (shares) |
-
-> **Note:** Docs Writer is a lightweight sub-role with no dedicated MCP server; it shares the `gh_design` server with PO.
-
-Route opencode/MCP/agent-infrastructure questions to **AI** (`@ai`), not
-BE/FE.
+The full squad roster, tags, and "when to use" cheat sheet live in
+`.opencode/agents/pm.md` (single source of truth). Route opencode / MCP /
+agent-infrastructure questions to **AI** (`@ai`), not BE/FE.
 
 ---
 

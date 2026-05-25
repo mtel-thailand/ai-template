@@ -27,7 +27,7 @@ GitHub (Issues/PRs/Board)
    └────┬────┘
         │
    ┌────┴──────────────────────────────────┐
-   │  Agent Squad                          │
+   │  Agent Squad (12 roles)               │
    │                                       │
    │  PM ─── orchestrator                  │
    │  PO ─── scope & criteria              │
@@ -36,10 +36,11 @@ GitHub (Issues/PRs/Board)
    │  FE ─── frontend + UX impl (TDD)      │
    │  Reviewer ─── PR review, approvals    │
    │  QA ─── test plan & sign-off          │
-   │  Security ─── threat model & vulns     │
+   │  Security ─── threat model & vulns    │
    │  SRE ─── reliability & perf           │
    │  DevOps ─── infra & CI/CD             │
-   │  AI ─── agent config + research       │
+   │  AI ─── agent system & MCP config     │
+   │  Researcher ─── deep research, briefs │
    └───────────────────────────────────────┘
 ```
 

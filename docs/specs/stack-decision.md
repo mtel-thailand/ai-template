@@ -1,11 +1,11 @@
 # Stack Decision Framework
 
-> **Audience:** Solutions Architect (SA) — required reading before any architecture recommendation.
+> **Audience:** Tech Lead — required reading before any architecture recommendation.
 > **Purpose:** Standardise the stack selection process so every project starts with a well-reasoned technical foundation.
 
 ## The Decision Tree
 
-Before recommending ANY stack, the SA MUST walk through this decision tree:
+Before recommending ANY stack, the Tech Lead MUST walk through this decision tree:
 
 ```
 START HERE
@@ -57,7 +57,7 @@ START HERE
     └─ Standard (LCP < 4s) — Most architectures suffice
 ```
 
-The SA MUST document the answer to EVERY question in the "Initial Stack Selection" ADR (see template below).
+The Tech Lead MUST document the answer to EVERY question in the "Initial Stack Selection" ADR (see template below).
 
 ## Stack Comparison Table
 
@@ -112,7 +112,7 @@ The SA MUST document the answer to EVERY question in the "Initial Stack Selectio
 
 ## Initial Stack Selection ADR Template
 
-Every new project MUST fill in this template before the design gate opens. The SA copies this template to `/docs/adr/001-initial-stack-selection.md` and fills in all sections.
+Every new project MUST fill in this template before the design gate opens. The Tech Lead copies this template to `/docs/adr/001-initial-stack-selection.md` and fills in all sections.
 
 ```markdown
 # ADR-001: Initial Stack Selection

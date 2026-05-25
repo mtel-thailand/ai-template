@@ -12,56 +12,61 @@
   },
   "agent": {
     "pm": {
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.3
     },
     "po": {
-      "model": "anthropic/claude-sonnet-4-haiku",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.4
     },
-    "sa": {
-      "model": "anthropic/claude-sonnet-4-20250514",
-      "temperature": 0.2
-    },
     "tech-lead": {
-      "model": "anthropic/claude-sonnet-4-20250514",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.2
     },
     "be": {
-      "model": "anthropic/claude-sonnet-4-20250514",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.2
     },
     "fe": {
-      "model": "anthropic/claude-sonnet-4-20250514",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.2
     },
     "reviewer": {
-      "model": "anthropic/claude-sonnet-4-20250514",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.1
     },
     "qa": {
-      "model": "anthropic/claude-sonnet-4-haiku",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.2
     },
     "security": {
-      "model": "anthropic/claude-sonnet-4-haiku",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.1
     },
     "sre": {
-      "model": "anthropic/claude-sonnet-4-haiku",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.2
     },
     "devops": {
-      "model": "anthropic/claude-sonnet-4-haiku",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.2
     },
     "ai": {
-      "model": "anthropic/claude-sonnet-4-20250514",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.2
+    },
+    "researcher": {
+      "model": "anthropic/claude-opus-4-7",
+      "temperature": 0.5
     }
   },
   "permission": {
     "edit": "allow",
     "bash": {
+      "git push *": "deny",
+      "git push --force *": "deny",
+      "git push -f *": "deny",
+      "git reset --hard *": "deny",
       "npm run *": "allow",
       "npm test*": "allow",
       "npx *": "allow",
@@ -98,7 +103,7 @@
       "url": "https://api.githubcopilot.com/mcp/",
       "enabled": true,
       "headers": {
-        "Authorization": "Bearer {env:GH_PAT_PM}",
+        "Authorization": "Bearer {env:GITHUB_PAT}",
         "X-MCP-Toolsets": "context,projects,issues,labels,notifications,discussions,users,orgs,pull_requests"
       }
     },
@@ -107,7 +112,7 @@
       "url": "https://api.githubcopilot.com/mcp/",
       "enabled": true,
       "headers": {
-        "Authorization": "Bearer {env:GH_PAT_DESIGN}",
+        "Authorization": "Bearer {env:GITHUB_PAT}",
         "X-MCP-Toolsets": "context,issues,labels,repos,discussions,git"
       }
     },
@@ -116,7 +121,7 @@
       "url": "https://api.githubcopilot.com/mcp/",
       "enabled": true,
       "headers": {
-        "Authorization": "Bearer {env:GH_PAT_TL}",
+        "Authorization": "Bearer {env:GITHUB_PAT}",
         "X-MCP-Toolsets": "context,issues,labels,repos,pull_requests,git"
       }
     },
@@ -125,7 +130,7 @@
       "url": "https://api.githubcopilot.com/mcp/",
       "enabled": true,
       "headers": {
-        "Authorization": "Bearer {env:GH_PAT_DEV}",
+        "Authorization": "Bearer {env:GITHUB_PAT}",
         "X-MCP-Toolsets": "context,issues,labels,repos,pull_requests,git,actions,gists"
       }
     },
@@ -134,7 +139,7 @@
       "url": "https://api.githubcopilot.com/mcp/",
       "enabled": true,
       "headers": {
-        "Authorization": "Bearer {env:GH_PAT_REVIEW}",
+        "Authorization": "Bearer {env:GITHUB_PAT}",
         "X-MCP-Toolsets": "context,issues,labels,repos,pull_requests,git"
       }
     },
@@ -143,7 +148,7 @@
       "url": "https://api.githubcopilot.com/mcp/",
       "enabled": true,
       "headers": {
-        "Authorization": "Bearer {env:GH_PAT_QA}",
+        "Authorization": "Bearer {env:GITHUB_PAT}",
         "X-MCP-Toolsets": "context,issues,labels,repos,git,pull_requests,actions"
       }
     },
@@ -152,7 +157,7 @@
       "url": "https://api.githubcopilot.com/mcp/",
       "enabled": true,
       "headers": {
-        "Authorization": "Bearer {env:GH_PAT_SEC}",
+        "Authorization": "Bearer {env:GITHUB_PAT}",
         "X-MCP-Toolsets": "context,code_security,secret_protection,security_advisories,dependabot,issues,labels"
       }
     },
@@ -161,7 +166,7 @@
       "url": "https://api.githubcopilot.com/mcp/",
       "enabled": true,
       "headers": {
-        "Authorization": "Bearer {env:GH_PAT_SRE}",
+        "Authorization": "Bearer {env:GITHUB_PAT}",
         "X-MCP-Toolsets": "context,issues,labels,repos,git,pull_requests,actions"
       }
     },
@@ -170,7 +175,7 @@
       "url": "https://api.githubcopilot.com/mcp/",
       "enabled": true,
       "headers": {
-        "Authorization": "Bearer {env:GH_PAT_DEVOPS}",
+        "Authorization": "Bearer {env:GITHUB_PAT}",
         "X-MCP-Toolsets": "context,actions,repos,git,pull_requests,dependabot,github_support_docs_search"
       }
     },
@@ -179,8 +184,17 @@
       "url": "https://api.githubcopilot.com/mcp/",
       "enabled": true,
       "headers": {
-        "Authorization": "Bearer {env:GH_PAT_AI}",
+        "Authorization": "Bearer {env:GITHUB_PAT}",
         "X-MCP-Toolsets": "context,issues,labels,repos,discussions,git"
+      }
+    },
+    "gh_research": {
+      "type": "remote",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "enabled": true,
+      "headers": {
+        "Authorization": "Bearer {env:GITHUB_PAT}",
+        "X-MCP-Toolsets": "context,issues,repos,discussions"
       }
     }
   }

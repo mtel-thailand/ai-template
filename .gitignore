@@ -29,3 +29,9 @@ dist-ssr
 # .opencode/memory/ — session-scoped tiers are local only
 .opencode/memory/short/
 .opencode/memory/forgettable/
+
+# SR1: SQLite database + sidecar files (MUST remain uncommitted)
+*.db
+*.db-wal
+*.db-shm
+*.db-journal

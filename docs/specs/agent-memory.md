@@ -14,15 +14,19 @@
 .opencode/memory/
 ```
 
-### Subdirectories
+### Layout (with default backend per tier — see §15)
 
-| Directory | Git status | Tier mapping | Purpose |
-|-----------|-----------|--------------|---------|
-| `.opencode/memory/short/` | **gitignored** | `short` | Session-scoped; purged on session end |
-| `.opencode/memory/mid/` | committed | `mid` | Project-scoped; 30-day sliding TTL |
-| `.opencode/memory/long/` | committed | `long` | Project or global; manual prune only |
-| `.opencode/memory/frequent/` | committed | `frequent-access` | Hot cache; recomputed nightly |
-| `.opencode/memory/forgettable/` | **gitignored** | `forgettable` | 7-day hard TTL, hard-delete |
+| Path | Git status | Tier mapping | Backend (default) | Purpose |
+|------|-----------|--------------|-------------------|---------|
+| `.opencode/memory/short/` | **gitignored** | `short` | file | Session-scoped; purged on session end |
+| `.opencode/memory/forgettable/` | **gitignored** | `forgettable` | file | 7-day hard TTL, hard-delete |
+| `.opencode/memory/memory.db` | **gitignored** *(includes `*.db-wal`, `*.db-shm`, `*.db-journal`)* | `mid`, `long`, `frequent` | `sqlite-vec` | Canonical store for the three indexed tiers |
+| `.opencode/memory/exports/*.jsonl` | **committed** | `mid`, `long`, `frequent` | (derived) | Diff/review surface for the SQLite-backed tiers. Satisfies R3 reviewer obligation (§11). Excludes the `embedding` field per ADR-0003 security requirements. |
+| `.opencode/memory/conflicts/` | committed | (migration only) | — | Loser-archive from one-shot import (see ADR-0003 migration plan) |
+
+**Rationale for gitignoring `memory.db`** (ratified in ADR-0003): a binary `.db` produces useless diffs on every read (timestamps and access counts mutate continuously) and defeats the R3 reviewer obligation in §11. The JSONL export is the text, diff-able, human-scannable surface that satisfies R3. CI guards against staged `*.db*` files.
+
+**Per-tier override:** any tier's backend can be swapped to `file`, `pgvector`, `qdrant`, etc. via `opencode.json` — see §15.
 
 ### Index file
 
@@ -105,23 +109,23 @@ The tier value `frequent-access` maps to the directory name `frequent/`. This is
 
 ## 5. Retrieval Flow
 
-### Default (zero runtime dependencies)
+### Default (per ADR-0003)
+
+For SQLite-backed tiers (`mid`, `long`, `frequent` by default — see §15):
 
 1. **`MEMORY.md` always loaded** — at session start, the root index is loaded into agent context.
-2. **`ripgrep` on-demand** — agents search memory content via `rg` (ripgrep) over `.opencode/memory/` when they need details beyond the index.
-3. **`[[wikilink]]` traversal** — agents follow inter-note links to navigate related memory entries.
+2. **Hybrid search via the backend** — agents call `search(query, k, mode='hybrid')` which composes vector similarity (`sqlite-vec`) and FTS5 BM25 in a single SQL query. Default weights: vector 0.7 / lexical 0.3 (see §15.2).
+3. **`[[wikilink]]` traversal** — agents follow inter-note links between hits.
 
-This flow requires **zero runtime dependencies**: no vector database, no embedding model, no external service.
+### File-vault path (per-tier fallback)
 
-### Upgrade path (deferred — out of scope for this specification)
+For `short` and `forgettable` tiers (file-backed by default), and for any tier explicitly configured with `backend.type = "file"`:
 
-When either condition is met:
-- Corpus exceeds **500 notes**, OR
-- **p95 recall@5 drops below 0.85**
+1. **`MEMORY.md` always loaded.**
+2. **`ripgrep` on-demand** — agents search via `rg` over the relevant directory.
+3. **`[[wikilink]]` traversal.**
 
-…the squad may adopt `sqlite-vss` + a small embedding model (either **BGE-small** or **all-MiniLM-L6-v2**) for semantic retrieval.
-
-**The upgrade is explicitly out of scope for this ticket.** It is documented here as a known future path.
+This is also the documented emergency fallback if the embedder or SQLite extension fail to load (see ADR-0003 Reliability section).
 
 ---
 
@@ -143,8 +147,9 @@ All eviction rules are enforced by the script `npm run memory:gc`, which is **no
 
 ## 7. Runtime Dependencies
 
-- **Runtime: zero.** No Postgres, no vector DB, no embedding model, no external service.
-- **Future dev/script dependencies** (for the `npm run memory:gc` script in #16): `gray-matter` (YAML frontmatter parsing), `zod` (schema validation). These are **not added** in this ticket.
+- **Default runtime deps** (ADR-0003): `better-sqlite3` (Node), the `sqlite-vec` loadable extension (pinned, SHA-256 verified), and `@huggingface/transformers` running a local ONNX embedding model (default: `Xenova/all-MiniLM-L6-v2`). All run in-process; no network service is required.
+- **Zero-dependency fallback.** Forks that decline the native-extension dependency can set every tier's backend to `file` (see §15.4); the retrieval flow degrades to the ripgrep + `[[wikilink]]` path in §5.
+- **Dev/script dependencies:** `gray-matter` (YAML frontmatter parsing), `zod` (schema validation), used by `npm run memory:gc` and `memory:lint`.
 
 ---
 
@@ -227,3 +232,64 @@ Projects forking this template that will handle **real customer data** MUST:
 - **ADR:** Comment 4531576113 on Issue #15 — architecture decision record for N=5, p95 recall@5=0.85, and directory naming.
 - **QA test plan:** Comment 4531578258 on Issue #15 — CI grep plan for verifying this spec.
 - **Issue #16:** GC script implementation (follow-up).
+
+---
+
+## 15. Storage Backends
+
+This section documents the **interface-level contract** for memory storage. The decision and rationale live in **ADR-0003** (`/docs/adr/0003-sqlite-vec-memory-backend.md`); this spec section names the contract that downstream code, forks, and adapters must honour.
+
+### 15.1 Default
+
+| Tier | Backend |
+|------|---------|
+| `short` | `file` |
+| `forgettable` | `file` |
+| `mid` | `sqlite-vec` |
+| `long` | `sqlite-vec` |
+| `frequent` | `sqlite-vec` |
+
+### 15.2 Configuration schema
+
+The `memory` section of `opencode.json` controls backend selection. See ADR-0003 for the canonical JSONC sketch; field annotations:
+
+| Field | Type | Default | Valid values |
+|---|---|---|---|
+| `memory.version` | integer | `1` | `1` |
+| `memory.backends.<tier>.type` | string | per §15.1 | `file`, `sqlite-vec`, `pgvector` *(deferred)*, `qdrant` *(deferred)* |
+| `memory.backends.<tier>.path` | string | `.opencode/memory/memory.db` | required for `sqlite-vec` |
+| `memory.embedder.kind` | string | `transformers-js` | `transformers-js`, `remote` *(deferred)* |
+| `memory.embedder.model` | string | `Xenova/all-MiniLM-L6-v2` | any HF model id with ONNX weights and matching `lockfile` entry |
+| `memory.embedder.dim` | integer | `384` | must match the model's output dim |
+| `memory.embedder.quantization` | string | `fp32` | `fp32`, `fp16`, `q8`, `q4` |
+| `memory.embedder.lockfile` | string | `.opencode/memory/embeddings.lock` | SHA-256 manifest |
+| `memory.sqlite.extensionPath` | string | `bin/sqlite-vec` | path to loadable extension |
+| `memory.sqlite.extensionLockfile` | string | `.opencode/memory/sqlite-vec.lock` | SHA-256 manifest |
+| `memory.sqlite.pragmas.journal_mode` | string | `WAL` | `WAL` only in v1 |
+| `memory.sqlite.pragmas.synchronous` | string | `NORMAL` | `NORMAL`, `FULL` |
+| `memory.sqlite.pragmas.busy_timeout` | integer (ms) | `5000` | ≥ 1000 |
+| `memory.sqlite.pragmas.foreign_keys` | string | `ON` | `ON`, `OFF` |
+| `memory.sqlite.pragmas.temp_store` | string | `MEMORY` | `MEMORY`, `FILE`, `DEFAULT` |
+| `memory.search.hybridWeights.vector` | float | `0.7` | `0.0`–`1.0` |
+| `memory.search.hybridWeights.lexical` | float | `0.3` | sums with vector to `1.0` |
+| `memory.search.ftsTimeoutMs` | integer | `500` | ≤ 5000 |
+| `memory.search.annTrigger.corpusSize` | integer | `5000` | — |
+| `memory.search.annTrigger.searchP99Ms` | integer | `500` | — |
+| `memory.search.annTrigger.recallAt5` | float | `0.85` | `0.0`–`1.0` |
+| `memory.exports.path` | string | `.opencode/memory/exports` | directory path |
+| `memory.exports.excludeFields` | array | `["embedding"]` | MUST include `"embedding"` |
+
+### 15.3 Per-tier override
+
+Backends are selected **per tier**, not globally. Override semantics:
+- Each tier resolves to exactly one backend instance.
+- Multiple tiers may share a backend instance.
+- The Embedder is **shared across all backends** within a process.
+
+### 15.4 Opt-out
+
+Set every tier's `type` to `file` for the no-SQLite path. Retrieval degrades to the §5 ripgrep + `[[wikilink]]` flow. Supported emergency fallback.
+
+### 15.5 Decision and trade-offs
+
+See **ADR-0003** for the architecture decision, alternatives, threat model, NFR budgets, and migration plan.

@@ -103,5 +103,6 @@ The squad maintains a shared memory vault at `.opencode/memory/`. See `/docs/spe
 
 ## GitHub workflow
 - `gh_sre_*` for reading Issues/PRs and posting comments.
-- Never push to remote and never open/merge PRs without explicit
-  authorization.
+- Routine remote writes (push to feature branches, open PRs) are autonomous
+  per Rule 2. Merging any PR, pushing to protected branches, and destructive
+  git operations require explicit user authorization.

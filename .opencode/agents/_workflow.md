@@ -5,61 +5,67 @@ hard rules apply without exception. This document is referenced by every file
 under `.opencode/agents/`.
 
 Autonomous long-running sessions follow the **Long-running session protocol**
-(see below) but remain bound by all 6 hard rules — especially rule 2 (never
-push without explicit user authorization in the current session).
+(see below) but remain bound by all 6 hard rules — especially the
+authorization boundary (Rule 2): routine remote writes are autonomous;
+merging, force-push, and protected-branch writes require per-action
+authorization.
 
 ---
 
 ## The 6 Hard Rules (non-negotiable)
 
-1. **Gitflow-style branching. `main` is protected.**
-   Branch from `main`. Never commit or push directly to `main`. All merges to
-   `main` happen via PR with required reviews and green CI.
-   Branch names: `feature/<issue#>-<slug>`, `fix/<issue#>-<slug>`,
-   `refactor/<issue#>-<slug>`, `chore/<issue#>-<slug>`,
-   `docs/<issue#>-<slug>`, `test/<issue#>-<slug>`.
-   Commits follow Conventional Commits and reference the Issue (`#NNN`).
+### 1. Gitflow branching
+`main` is protected. Branch from latest `main` using `feature/<#>-`,
+`fix/<#>-`, `refactor/<#>-`, `chore/<#>-`, `docs/<#>-`, or
+`test/<#>-`. Merges to `main` go through a reviewed PR with green CI.
+Conventional Commits.
 
-2. **Never push to remote unless explicitly asked.**
-   Local commits are fine. `git push`, `gh pr create`, any
-   `gh_*_create_pull_request`, any `gh_*_merge_pull_request`, and any tool that
-   publishes to GitHub require explicit user authorization in the current
-   session. This applies to every agent.
+### 2. Routine remote writes are autonomous; destructive ops need authorization.
+**Autonomous (no per-action auth):** pushing to feature branches, opening PRs,
+posting comments, applying labels, moving board cards, creating branches,
+filing follow-up tickets.
 
-3. **Always pull latest before starting any work.**
-   First action of every work session: `git fetch --all --prune` then
-   `git pull --rebase origin main` (or rebase the working branch onto the
-   latest `main`). If there are local uncommitted changes, stop and ask before
-   pulling.
+**Requires explicit user authorization in current session:** merging any PR;
+pushing to `main` or any protected branch; force-push / `--force-with-lease` /
+history rewrite; deleting branches with unmerged commits; bypassing failing CI;
+`git reset --hard` on shared refs.
 
-4. **Never work without a ticket.**
-   No code, docs, or design artifacts without an open GitHub Issue assigned or
-   at minimum referenced. If asked to "just do a quick thing", first create or
-   locate the Issue. PM creates the tracking Issue; PO fills description and
-   acceptance criteria; everyone else attaches their work to it.
+### 3. Pull before starting.
+`git fetch --all --prune && git pull --rebase origin main` before opening a new
+branch.
 
-5. **Always keep GitHub up to date.**
-   Issue: status, labels, assignee, comments at every phase transition.
-   Board: card moves with the phase. PR: linked to Issue ("Closes #N"), follows
-   template, reviewers requested. Pages (`/docs`): every PR that changes
-   behavior, contracts, or architecture also updates `/docs/`. Use the
-   role-scoped `gh_*` MCP tools — never bypass them.
+### 4. Substantive work has a ticket.
+Anything beyond a trivial fix gets an Issue. **Trivial-fix exception:** docs
+typo, formatting, broken links, orphaned-file commits, dependabot acks.htmlA
+Conventional-Commit PR is enough; an Issue is optional. Implementer's judgment;
+if unsure, file the Issue.
 
-6. **Always document changes and update technical documents.**
-   Code change → `/docs/` update (ADRs, architecture, API contracts, runbooks
-   as relevant). Tech Lead writes ADRs. PO writes feature specs in
-   `/docs/specs/`. FE writes UX specs in `/docs/ux/` (FE owns UX fidelity).
-   DevOps writes runbooks in `/docs/runbooks/`. The `docs-skip` label is the
-   ONLY exception, and only for trivial changes (typos, formatting, CI tweaks
-   with no behavior impact).
+### 5. GitHub mirrors reality.
+Status comments on Issues when starting/finishing work. Board card moves with
+status. PRs link their Issue (`Closes #N`). `/docs/` moves together with source
+changes.
+
+### 6. Document substantive decisions.
+ADRs for architectural choices, specs under `/docs/specs/`, UX specs under
+`/docs/ux/`, runbooks under `/docs/runbooks/`. `docs-skip` label for trivial
+changes.
+
+### Hard guardrails (no override, no authorization unlocks these)
+- Never push secrets, credentials, API keys, tokens, or `.env` contents
+- Never bypass failing CI to merge
+- Never delete branches with unmerged commits
+- Never amend or force-push merged history
+- Never run `rm -rf` outside a tmpdir
+- Agents never merge their own PRs — only PM or user merges
+- T3 design tickets require all named sign-offs before merge
 
 ---
 
 ## Autonomy tiers
 
 The 6 hard rules define WHAT is required. The autonomy tiers define WHEN you
-may act without waiting. They operationalise hard rule 2 for specific actions
-and batch approval requests to minimise interruptions.
+may act without waiting. They operationalise Rule 2's authorization boundary
+for specific actions and batch approval requests to minimise interruptions.
 
 ### AUTONOMOUS (no human approval needed)
 
@@ -150,7 +156,9 @@ Every single instance requires explicit user authorization. No batching:
 ## Post-flight checklist (before reporting done)
 
 1. Confirm DoD is satisfied.
-2. Push only if explicitly authorized in this session.
+2. Push routine changes autonomously; require per-action authorization for
+   merges, protected-branch pushes, force-pushes, and destructive operations
+   per Rule 2.
 3. Post a structured handoff comment on the Issue (template below).
 4. Move the board card. Update labels. Re-assign if needed.
 5. Stop. Do not auto-start the next ticket.
@@ -228,9 +236,10 @@ period in the subject.
 ## Long-running session protocol
 
 For autonomous multi-agent sessions. Replaces the older "stop and hand back"
-escalation pattern. All 6 hard rules still apply — especially rule 2: this
-protocol never pushes, opens, or merges PRs without explicit user
-authorization. The autonomous loop runs local-only by default.
+escalation pattern. All 6 hard rules still apply — especially Rule 2: routine writes to feature
+branches and PR creation are autonomous; merging, protected-branch writes,
+and destructive ops still need explicit user authorization. The autonomous
+loop runs local-only by default.
 
 ### §1. Time-boxed blocker detection
 
@@ -390,8 +399,8 @@ whichever first), the orchestrator posts a single comment containing:
 The autonomous session MUST stop and wait for the user when any of these are
 true:
 
-- A push, PR open, or PR merge is needed (hard rule 2 — never push without
-  explicit ask in the current session).
+- A merge, push to `main` or a protected branch, force-push, or destructive
+  branch/commit operation is needed without user authorization (Rule 2).
 - **All** implementer roles are simultaneously blocked.
 - A blocker Issue has been open >24h with no human answer **and** no safe
   default is available.
@@ -424,7 +433,7 @@ ones before starting an autonomous session.
 
 - Time-box triggers in §1 are the canonical blocker definition.
 - Single-active-ticket rule is folded into §4.
-- Hard rule 2 (never push without explicit ask) governs §6 step 5 and §8.
+- Rule 2 (routine writes autonomous; destructive ops need auth) governs §6 step 5 and §8.
 - Debugging failures invoke the `debugging-and-error-recovery` skill before
   declaring a §1 blocker.
 

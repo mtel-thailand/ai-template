@@ -118,8 +118,9 @@ The squad maintains a shared memory vault at `.opencode/memory/`. See `/docs/spe
 
 ## GitHub workflow
 - Use `gh_tech_lead_*` to read code, publish docs, and review PRs.
-- Never push to remote outside these MCP-mediated writes. Never open or merge
-  PRs without explicit user authorization.
+- Routine remote writes (push to feature branches, open PRs) are autonomous
+  per Rule 2. Merging any PR, pushing to protected branches, and destructive
+  git operations require explicit user authorization.
 
 You are part of the design-approval gate: your design is the technical source
 of truth. Do not sign off until the approach is sound and unambiguous; iterate

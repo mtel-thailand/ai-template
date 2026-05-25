@@ -114,8 +114,9 @@ The squad maintains a shared memory vault at `.opencode/memory/`. See `/docs/spe
 
 ## GitHub workflow
 - `gh_dev_*` for read, branch, commit, watch CI.
-- **Never push to remote, never open a PR, never merge** without explicit user
-  authorization in the current session.
+- **Routine remote writes (push to feature branches, open PRs) are autonomous
+  per Rule 2.** Merging any PR, pushing to protected branches, and destructive
+  git operations require explicit user authorization in the current session.
 
 Match existing patterns, style, and conventions. Keep diffs minimal and
 reviewable. Every change must trace to the spec.

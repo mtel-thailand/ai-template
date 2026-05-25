@@ -6,30 +6,34 @@
  *
  * Uses node:test and node:assert. No test framework dependencies.
  *
- * KNOWN ISSUE: this test suite destructively uses the real
- * .opencode/memory/ directory for setup/teardown. On a developer machine
- * with real memory files, running these tests will DELETE those files.
- * Tracked as a follow-up bug (post-#16).
+ * Test isolation (per #21): all setup/teardown operations target a fresh
+ * temp directory (TEST_VAULT) under os.tmpdir(). The MEMORY_ROOT env var
+ * is passed to the spawned GC script so it operates on the temp vault
+ * instead of the real .opencode/memory/ directory.
  */
 
 import { describe, it, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { mkdirSync, writeFileSync, readFileSync, rmSync, existsSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { mkdirSync, writeFileSync, readFileSync, rmSync, existsSync, readdirSync, mkdtempSync } from "node:fs";
+import { join, relative } from "node:path";
+import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-// ─── Paths ─────────────────────────────────────────────────────────────────────
+// ─── Paths ───────────────────────────────────────────────────────────────────
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const GC_SCRIPT = join(__dirname, "memory-gc.mjs");
-const FIXTURE_DIR = join(__dirname, "memory-gc.fixture");
+
+/** Temp directory used as MEMORY_ROOT during tests. Initialised in before(). */
+let TEST_VAULT = null;
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
 function runGC(...args) {
   const result = spawnSync("node", [GC_SCRIPT, ...args], {
     cwd: join(__dirname, ".."),
+    env: { ...process.env, MEMORY_ROOT: TEST_VAULT },
     encoding: "utf-8",
   });
   return {
@@ -40,38 +44,35 @@ function runGC(...args) {
 }
 
 function setupVault(files) {
-  const vaultDir = join(__dirname, "..", ".opencode", "memory");
-  mkdirSync(vaultDir, { recursive: true });
-
+  mkdirSync(TEST_VAULT, { recursive: true });
   for (const [relPath, content] of Object.entries(files)) {
-    const fullPath = join(vaultDir, relPath);
+    const fullPath = join(TEST_VAULT, relPath);
     mkdirSync(join(fullPath, ".."), { recursive: true });
     writeFileSync(fullPath, content, "utf-8");
   }
 }
 
 function readVault() {
-  const vaultDir = join(__dirname, "..", ".opencode", "memory");
-  if (!existsSync(vaultDir)) return {};
-
+  if (!existsSync(TEST_VAULT)) return {};
   const result = {};
   function walk(dir) {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const full = join(dir, entry.name);
       if (entry.isDirectory()) walk(full);
       else if (entry.isFile() && entry.name.endsWith(".md")) {
-        result[join(".opencode/memory/", full.split("memory/")[1])] = readFileSync(full, "utf-8");
+        const relPath = relative(TEST_VAULT, full);
+        result[relPath] = readFileSync(full, "utf-8");
       }
     }
   }
-  walk(vaultDir);
+  walk(TEST_VAULT);
   return result;
 }
 
 function tearDownVault() {
-  const vaultDir = join(__dirname, "..", ".opencode", "memory");
-  if (existsSync(vaultDir)) {
-    rmSync(vaultDir, { recursive: true, force: true });
+  if (TEST_VAULT && existsSync(TEST_VAULT)) {
+    rmSync(TEST_VAULT, { recursive: true, force: true });
+    mkdirSync(TEST_VAULT, { recursive: true });
   }
 }
 
@@ -254,10 +255,13 @@ Body with bad importance.
 describe("memory-gc.mjs", () => {
   before(() => {
     assert.ok(existsSync(GC_SCRIPT), "GC script must exist");
+    TEST_VAULT = mkdtempSync(join(tmpdir(), "memory-gc-test-"));
   });
 
   after(() => {
-    tearDownVault();
+    if (TEST_VAULT && existsSync(TEST_VAULT)) {
+      rmSync(TEST_VAULT, { recursive: true, force: true });
+    }
   });
 
   describe("--validate-only", () => {
@@ -336,8 +340,8 @@ describe("memory-gc.mjs", () => {
       assert.match(stdout, /stale-forgettable-note/);
 
       const vault = readVault();
-      assert.ok(vault[".opencode/memory/mid/stale-mid-note.md"], "Stale mid note should still exist after dry-run");
-      assert.ok(vault[".opencode/memory/forgettable/stale-forgettable-note.md"], "Stale forgettable note should still exist after dry-run");
+      assert.ok(vault["mid/stale-mid-note.md"], "Stale mid note should still exist after dry-run");
+      assert.ok(vault["forgettable/stale-forgettable-note.md"], "Stale forgettable note should still exist after dry-run");
     });
   });
 
@@ -387,8 +391,8 @@ Budget test note ${idx}.
       assert.match(stdout, /Evictions:\s*1/);
 
       const vault = readVault();
-      assert.ok(vault[".opencode/memory/mid/valid-test-note.md"], "Valid mid note should still exist");
-      assert.ok(!vault[".opencode/memory/forgettable/stale-forgettable-note.md"], "Stale forgettable note should be removed");
+      assert.ok(vault["mid/valid-test-note.md"], "Valid mid note should still exist");
+      assert.ok(!vault["forgettable/stale-forgettable-note.md"], "Stale forgettable note should be removed");
     });
   });
 });

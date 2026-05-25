@@ -4,15 +4,19 @@
  * memory-gc.mjs — Agent Memory Garbage Collector
  *
  * 5-phase script that validates, budgets, evicts, and writes back memory
- * vault entries under .opencode/memory/.
+ * vault entries under .opencode/memory/ (or $MEMORY_ROOT if set).
  *
  * Usage:
  *   node scripts/memory-gc.mjs              # full run with writes
  *   node scripts/memory-gc.mjs --validate-only  # phases 1–2 only, exit 1 on failure
  *   node scripts/memory-gc.mjs --dry-run        # all phases, no writes
  *
+ * Env:
+ *   MEMORY_ROOT  Override the vault directory (used by tests).
+ *                Falls back to .opencode/memory/ relative to cwd.
+ *
  * Exit codes:
- *   0 — success (all valid, within budgets)
+ *   0 — success (all valid, within budgets; empty vault is OK)
  *   1 — schema validation failure (only with --validate-only)
  *   2 — budget violations detected (entries exceed tier limits)
  *   3 — I/O error or unexpected internal failure
@@ -65,11 +69,12 @@ const TIER_DIRS = {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-const MEMORY_ROOT = join(process.cwd(), ".opencode", "memory");
+const MEMORY_ROOT = process.env.MEMORY_ROOT
+  ? process.env.MEMORY_ROOT
+  : join(process.cwd(), ".opencode", "memory");
 
 /**
  * Parse CLI flags from argv.
- * Returns { validateOnly: boolean, dryRun: boolean }.
  */
 function parseArgs() {
   const args = process.argv.slice(2);
@@ -109,9 +114,6 @@ function atomicWrite(targetPath, content) {
   renameSync(tmpPath, targetPath);
 }
 
-/**
- * Format a date as YYYY-MM-DD.
- */
 function todayISO() {
   const d = new Date();
   const yyyy = d.getFullYear();
@@ -120,17 +122,11 @@ function todayISO() {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-/**
- * Parse an ISO date string to a Date object.
- */
 function parseDate(str) {
   const [y, m, d] = str.split("-").map(Number);
   return new Date(y, m - 1, d);
 }
 
-/**
- * Days between two ISO date strings.
- */
 function daysBetween(isoA, isoB) {
   const a = parseDate(isoA);
   const b = parseDate(isoB);
@@ -155,7 +151,7 @@ function phase1DiscoverAndParse() {
         error: null,
       });
     } catch (err) {
-      errors.push(`Parse error: ${relative(process.cwd(), filePath)} \u2014 ${err.message}`);
+      errors.push(`Parse error: ${relative(process.cwd(), filePath)} — ${err.message}`);
     }
   }
 
@@ -275,15 +271,15 @@ function phase5WriteBack(entries, evictions, dryRun) {
 // ─── Report ─────────────────────────────────────────────────────────────────────
 
 function printReport({ phase1, phase2, phase3, phase4, phase5, flags }) {
-  console.log("\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550");
+  console.log("═══════════════════════════════════════════");
   console.log("  Memory GC Report");
-  console.log("\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550");
+  console.log("═══════════════════════════════════════════");
   console.log(`  Mode:         ${flags.dryRun ? "DRY RUN (no writes)" : flags.validateOnly ? "VALIDATE ONLY" : "FULL RUN"}`);
   console.log(`  Files found:  ${phase1.entries.length}`);
   if (phase1.errors.length > 0) {
     console.log(`  Parse errors: ${phase1.errors.length}`);
     for (const err of phase1.errors) {
-      console.log(`    \u2716 ${err}`);
+      console.log(`    ✖ ${err}`);
     }
   }
   console.log(`  Valid:        ${phase2.validCount}`);
@@ -291,7 +287,7 @@ function printReport({ phase1, phase2, phase3, phase4, phase5, flags }) {
   if (phase2.invalidCount > 0) {
     for (const entry of phase1.entries) {
       if (entry.error) {
-        console.log(`    \u2716 ${relative(process.cwd(), entry.filePath)}`);
+        console.log(`    ✖ ${relative(process.cwd(), entry.filePath)}`);
         for (const issue of entry.error.issues) {
           console.log(`      - ${issue.path.join(".")}: ${issue.message}`);
         }
@@ -303,23 +299,23 @@ function printReport({ phase1, phase2, phase3, phase4, phase5, flags }) {
   console.log(`  Budget violations: ${budgetKeys.length}`);
   for (const tier of budgetKeys) {
     const v = phase3[tier];
-    console.log(`    \u2716 ${tier}: ${v.count} entries (budget: ${v.budget}, over by ${v.over})`);
+    console.log(`    ✖ ${tier}: ${v.count} entries (budget: ${v.budget}, over by ${v.over})`);
   }
 
   console.log(`  Evictions:    ${phase4.length}`);
   for (const ev of phase4) {
-    console.log(`    \u2192 ${relative(process.cwd(), ev.entry.filePath)} \u2014 ${ev.reason}`);
+    console.log(`    → ${relative(process.cwd(), ev.entry.filePath)} — ${ev.reason}`);
   }
 
   if (!flags.validateOnly && !flags.dryRun) {
     console.log(`  Files written: ${phase5.written}`);
     console.log(`  Files removed: ${phase5.removed}`);
   } else if (flags.dryRun) {
-    console.log("  (dry-run \u2014 no files written or removed)");
+    console.log("  (dry-run — no files written or removed)");
   } else {
-    console.log("  (validate-only \u2014 no files written or removed)");
+    console.log("  (validate-only — no files written or removed)");
   }
-  console.log("\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550");
+  console.log("═══════════════════════════════════════════");
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────────────
@@ -327,13 +323,9 @@ function printReport({ phase1, phase2, phase3, phase4, phase5, flags }) {
 function main() {
   const flags = parseArgs();
 
-  // ── Phase 1 ──
   const phase1 = phase1DiscoverAndParse();
-
-  // ── Phase 2 ──
   const phase2 = phase2Validate(phase1.entries);
 
-  // If --validate-only, exit after phase 2
   if (flags.validateOnly) {
     printReport({
       phase1,
@@ -344,49 +336,34 @@ function main() {
       flags,
     });
 
-    // Empty vault is valid (e.g. fresh template clone) — do NOT exit 1.
-    // Only fail on parse errors or schema invalidation.
+    // Empty vault is valid (e.g. fresh template clone). Only fail on parse
+    // errors or schema invalidation.
     if (phase1.errors.length > 0 || phase2.invalidCount > 0) {
-      console.error("\n\u274C Validation failed.");
+      console.error("\n❌ Validation failed.");
       process.exit(1);
     }
-    console.log("\n\u2705 Validation passed.");
+    console.log("\n✅ Validation passed.");
     process.exit(0);
   }
 
-  // ── Phase 3 ──
   const phase3 = phase3EnforceBudgets(phase1.entries);
   const hasViolations = Object.keys(phase3).length > 0;
-
-  // ── Phase 4 ──
   const phase4 = phase4EvictAndGC(phase1.entries);
-
-  // ── Phase 5 ──
   const phase5 = phase5WriteBack(phase1.entries, phase4, flags.dryRun);
 
-  // ── Report ──
-  printReport({
-    phase1,
-    phase2,
-    phase3,
-    phase4,
-    phase5,
-    flags,
-  });
+  printReport({ phase1, phase2, phase3, phase4, phase5, flags });
 
-  // Exit code 2 for budget violations (even in dry-run)
   if (hasViolations) {
-    console.error("\n\u274C Budget violations detected.");
+    console.error("\n❌ Budget violations detected.");
     process.exit(2);
   }
 
-  // Exit code 1 for validation errors in full run (should not happen after phase 2)
   if (phase2.invalidCount > 0) {
-    console.error("\n\u274C Validation errors present \u2014 fix before next run.");
+    console.error("\n❌ Validation errors present — fix before next run.");
     process.exit(1);
   }
 
-  console.log("\n\u2705 Memory GC complete.");
+  console.log("\n✅ Memory GC complete.");
   process.exit(0);
 }
 

@@ -11,24 +11,24 @@ permission:
     git-and-npm-hygiene: allow
 tools:
   gh_devops_*: true
-  gh_dev_actions_get: true
-  gh_dev_actions_list: true
-  gh_dev_actions_run_trigger: true
-  gh_dev_get_commit: true
-  gh_dev_get_job_logs: true
-  gh_dev_create_pull_request: true
-  gh_dev_merge_pull_request: true
-  gh_dev_pull_request_read: true
-  gh_dev_pull_request_review_write: true
-  gh_dev_add_comment_to_pending_review: true
-  gh_dev_add_reply_to_pull_request_comment: true
-  gh_dev_update_pull_request: true
-  gh_dev_update_pull_request_branch: true
-  gh_dev_create_or_update_file: true
-  gh_dev_push_files: true
-  gh_dev_add_issue_comment: true
-  gh_dev_list_commits: true
-  gh_dev_search_code: true
+  gh_devops_actions_get: true
+  gh_devops_actions_list: true
+  gh_devops_actions_run_trigger: true
+  gh_devops_get_commit: true
+  gh_devops_get_job_logs: true
+  gh_devops_create_pull_request: true
+  gh_devops_merge_pull_request: true
+  gh_devops_pull_request_read: true
+  gh_devops_pull_request_review_write: true
+  gh_devops_add_comment_to_pending_review: true
+  gh_devops_add_reply_to_pull_request_comment: true
+  gh_devops_update_pull_request: true
+  gh_devops_update_pull_request_branch: true
+  gh_devops_create_or_update_file: true
+  gh_devops_push_files: true
+  gh_devops_add_issue_comment: true
+  gh_devops_list_commits: true
+  gh_devops_search_code: true
 ---
 
 # DevOps Engineer

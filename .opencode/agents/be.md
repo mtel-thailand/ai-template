@@ -9,7 +9,7 @@ permission:
   skill:
     git-and-npm-hygiene: allow
 tools:
-  gh_dev_*: true
+  gh_be_*: true
 ---
 
 # Backend Engineer

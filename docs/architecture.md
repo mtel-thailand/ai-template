@@ -95,7 +95,8 @@ The 6 hard rules in `_workflow.md` enforce:
 Skills are reusable instruction packs loaded on demand by agents:
 
 - **Domain skills**: NestJS, Next.js, React, TypeScript, Vite, Docker, etc.
-- **Cross-cutting skills**: accessibility, security, performance, code review
+- **Cross-cutting skills**: accessibility, security, performance, code review,
+  git-and-npm-hygiene (git, npm, and destructive-command rules for bash-enabled agents)
 - **Workflow skills**: spec-driven development, incremental implementation,
   planning & task breakdown, shipping & launch
 

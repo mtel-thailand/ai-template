@@ -1,4 +1,5 @@
 ---
+name: reviewer
 description: >-
   Code Reviewer. Automated PR review agent. Analyzes every diff for correctness,
   security, style, test coverage, architecture compliance. Can approve Tier 1/2

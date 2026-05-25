@@ -1,0 +1,18 @@
+# lefthook.yml — Lefthook configuration for pre-commit secret scrubbing
+#
+# See: https://github.com/evilmartians/lefthook
+#
+# The `memory-secret-scan` command runs on every commit against staged files
+# under .opencode/memory/. It uses the shared pattern module at
+# scripts/memory-secret-patterns.mjs (SSoT shared with memory:lint / #28).
+#
+# Bypass: git commit --no-verify (emergency escape valve)
+# Safety net: CI memory:lint step enforces the same check post-push
+
+pre-commit:
+  commands:
+    memory-secret-scan:
+      tags: security
+      glob: ".opencode/memory/**"
+      exclude: "memory.db*"
+      run: node .lefthook/scripts/secret-scan.mjs {staged_files}

@@ -4,7 +4,42 @@
 > **Canonical spec:** [`/docs/specs/agent-memory.md`](../specs/agent-memory.md)
 > **Status:** v1 — initial GC script
 
-## 1. Quick Reference
+## 1. Pre-commit secret-scrub hook (lefthook)
+
+### 1.1 Install
+
+1. Ensure `lefthook` is in `devDependencies` (Sub-task B added it).
+2. Run `npx lefthook install` once after cloning.
+3. Verify with `lefthook run pre-commit --files <path>`.
+
+### 1.2 How it works
+
+- Pre-commit fires on every `git commit`.
+- Scans staged files under `.opencode/memory/**` only (excludes `memory.db*` binary files).
+- Uses the shared pattern module at `scripts/memory-secret-patterns.mjs`.
+- Default mode runs `block`-severity patterns. Set `MEMORY_SCRUB_STRICT=1` to additionally run `block-strict` patterns (postal addresses, US SSN, credit-card shapes, GPS coordinates).
+
+### 1.3 Bypass (`--no-verify`)
+
+The hook is bypassable with `git commit --no-verify`. This is a deliberate emergency escape valve.
+
+**Appropriate uses:**
+- Hook is misfiring on a confirmed false positive (file an Issue with the example so the pattern can be tuned).
+- Time-critical revert or hotfix where review will catch the issue.
+
+**Inappropriate uses:**
+- "Just want to commit, don't have time to fix it" — fix the secret instead.
+- Confused about why the hook is firing — read the error output; it names the file and pattern.
+
+**Bypassing does NOT bypass CI.** The `memory:lint` job (#28) runs the same pattern module against JSONL exports in every PR. Real secrets caught at pre-commit will still be caught at CI; the pre-commit hook just gives a faster failure signal locally.
+
+### 1.4 Pattern modifications
+
+The pattern set is a controlled artifact governed by threat-model T-03. Pattern additions, removals, or regex changes require security review. File an Issue tagged `security` + `memory` and assign to `@security`.
+
+---
+
+## 2. Quick Reference
 
 | Command | What it does | Exit codes |
 |---------|-------------|------------|
@@ -13,9 +48,9 @@
 | `npm run memory:gc:dry` | Preview mode — all phases, no writes | 0 OK, 2 budget violation |
 | `npm test` | Run GC test suite (isolated from production vault via MEMORY_ROOT env var) | 0 pass, 1 fail |
 
-## 2. Common Operations
+## 3. Common Operations
 
-### 2.1 Validate memory files in CI
+### 3.1 Validate memory files in CI
 
 The CI workflow `.github/workflows/docs-check.yml` includes a `validate-memory`
 job that runs on every PR:
@@ -36,7 +71,7 @@ If validation fails:
 2. Open the failing file and fix the offending frontmatter field.
 3. Re-run `npm run memory:gc:validate` locally to confirm the fix.
 
-### 2.2 Run a full GC cycle
+### 3.2 Run a full GC cycle
 
 ```bash
 # 1. Preview changes
@@ -51,7 +86,7 @@ npm run memory:gc:dry
 npm run memory:gc
 ```
 
-### 2.3 Handle budget violations (exit code 2)
+### 3.3 Handle budget violations (exit code 2)
 
 | Tier | Budget | Action |
 |------|--------|--------|
@@ -59,7 +94,7 @@ npm run memory:gc
 | `long` | ≤ 200 | Manual review — prune entries with `importance < 3` and `access_count < 5` |
 | `frequent` | ≤ 20 | Demote manually by editing `tier:` to `long` (LFU recompute is out of scope for v1) |
 
-### 2.4 Recover an accidentally evicted file
+### 3.4 Recover an accidentally evicted file
 
 When `forgettable` entries are evicted, the file is renamed with a `.evicted`
 suffix. To recover:
@@ -70,15 +105,15 @@ mv .opencode/memory/forgettable/quick-thought.md.evicted .opencode/memory/forget
 # Update last_accessed to today's date to avoid re-eviction on next run
 ```
 
-## 3. Troubleshooting
+## 4. Troubleshooting
 
-### 3.1 Parse error for a specific file
+### 4.1 Parse error for a specific file
 
 Malformed YAML frontmatter (unterminated `---`, invalid indentation, tab chars).
 
 **Solution:** Inspect frontmatter delimiters, validate YAML, fix and re-run.
 
-### 3.2 Atomic write fails with EACCES
+### 4.2 Atomic write fails with EACCES
 
 Filesystem permissions on `.opencode/memory/`.
 
@@ -88,7 +123,7 @@ ls -la .opencode/memory/
 # Ensure the running user has write permission
 ```
 
-### 3.3 Gray-matter or Zod not found
+### 4.3 Gray-matter or Zod not found
 
 ```
 Error: Cannot find module 'gray-matter'
@@ -99,7 +134,7 @@ Error: Cannot find module 'gray-matter'
 npm install
 ```
 
-## 4. Schedule
+## 5. Schedule
 
 | Cadence | Action | Who |
 |---------|--------|-----|
@@ -108,7 +143,7 @@ npm install
 | Monthly | Manual review of `long` tier | SRE / Tech Lead |
 | Ad-hoc | When budget warnings appear in CI | Operator |
 
-## 5. Budget Reference
+## 6. Budget Reference
 
 | Tier | Max entries | TTL | Auto-eviction |
 |------|-------------|-----|---------------|
@@ -118,7 +153,7 @@ npm install
 | `frequent` | 20 | Nightly recompute | LFU demotion (out of scope) |
 | `forgettable` | Unlimited | 7-day hard | Hard-deleted (`.evicted` suffix) |
 
-## 6. Related Documents
+## 7. Related Documents
 
 - [ADR-0002: Memory GC Script](../adr/0002-memory-gc-script.md) — architectural decisions
 - [Agent Memory Specification §3](../specs/agent-memory.md) — 11-field schema

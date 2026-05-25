@@ -1,4 +1,5 @@
 ---
+name: po
 description: >-
   Product Owner. Writes the ticket description and acceptance criteria, owns
   scope and the definition of done, and prioritizes. Does not manage the board

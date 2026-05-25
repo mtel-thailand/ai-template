@@ -28,7 +28,7 @@ Requires a single `GITHUB_PAT` in `.env` (see `.env.example`). See
 |------|--------------|
 | **Agents** | PM, PO, Tech Lead, BE, FE, Reviewer, QA, Security, SRE, DevOps, AI, Researcher — 12 defined roles with role-scoped MCP servers (single shared `GITHUB_PAT`) |
 | **Workflow** | Universal contract (6 hard rules), three-tier design gate (T1/T2/T3), autonomy tiers, long-running session protocol |
-| **Skills** | 32 domain skill packs (NestJS, Next.js, React, Docker, security, accessibility, etc.) |
+| **Skills** | 33 domain skill packs (NestJS, Next.js, React, Docker, security, accessibility, etc.) |
 | **CI/CD** | GitHub Actions — build pipeline and docs-check workflow (expects project to add `package.json`) |
 | **Docs** | GitHub Pages-ready documentation site |
 
@@ -38,7 +38,7 @@ Requires a single `GITHUB_PAT` in `.env` (see `.env.example`). See
 .opencode/
 ├── opencode.json      # Platform config: agents, MCP, permissions, models
 ├── agents/            # 12 role definitions (system prompts + tool bindings)
-├── skills/            # 32 skill packs (NestJS, React, security, etc.)
+├── skills/            # 33 skill packs (NestJS, React, security, etc.)
 └── start.sh           # Launches opencode after loading GITHUB_PAT from .env
 .github/workflows/     # CI templates (ci.yml, docs-check.yml)
 docs/                  # This site — update for your project

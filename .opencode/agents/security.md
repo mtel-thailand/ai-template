@@ -1,4 +1,5 @@
 ---
+name: security
 description: >-
   Security Engineer. Threat modeling, vulnerability scanning, secret detection,
   dependency audits, OWASP Top 10 verification. Part of design-approval gate.

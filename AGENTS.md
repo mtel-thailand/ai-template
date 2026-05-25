@@ -117,6 +117,20 @@ agent-infrastructure questions to **AI** (`@ai`), not BE/FE.
 - The `.opencode/.gitignore` keeps `node_modules`, `package.json`, and
   `package-lock.json` out of the `.opencode/` subtree in git.
 
+## Canonical repo identity
+
+The canonical owner/repo for this project is **`mtel-thailand/ai-template`**.
+Agents must use these values for every GitHub MCP tool call (`gh_*_issue_read`,
+`gh_*_push_files`, etc.) — do not guess from `git remote`, the user's email,
+or prior session context. They are pinned in `.env` as:
+
+- `GITHUB_OWNER=mtel-thailand`
+- `GITHUB_REPO=ai-template`
+- `GITHUB_REPO_URL=https://github.com/mtel-thailand/ai-template`
+
+If `.env` is missing these, fall back to `.git/config` `remote.origin.url`,
+not to guessing.
+
 ## Operational gotchas
 
 - **opencode config is NOT hot-reloaded** — after editing `opencode.json` or

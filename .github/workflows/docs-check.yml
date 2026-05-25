@@ -57,6 +57,6 @@ jobs:
         with:
           node-version: '22'
       - name: 📦 Install
-        run: npm install --no-audit --no-fund
+        run: npm ci
       - name: 🧹 Validate memory frontmatter
         run: node scripts/memory-gc.mjs --validate-only

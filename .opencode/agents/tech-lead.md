@@ -1,4 +1,5 @@
 ---
+name: tech-lead
 description: >-
   Tech Lead. Owns technical integrity from design through implementation and
   review. Produces architecture and ADRs, oversees BE/FE implementation,
@@ -7,7 +8,7 @@ mode: subagent
 temperature: 0.2
 permission:
   edit: allow
-  bash: deny
+  bash: allow
   task:
     "*": deny
   skill:
@@ -19,6 +20,7 @@ permission:
     "spec-driven-development": "allow"
     "code-review-and-quality": "allow"
     "incremental-implementation": "allow"
+    "git-and-npm-hygiene": "allow"
 tools:
   gh_tech_lead*: true
 ---

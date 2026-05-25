@@ -46,8 +46,8 @@ GitHub (Issues/PRs/Board)
 
 ### Per-role bash permission model
 
-Git and shell access are scoped per role to enforce least privilege. Only four
-agents (`@devops`, `@ai`, `@be`, `@fe`) have any bash entitlement, and even
+Git and shell access are scoped per role to enforce least privilege. Only five
+agents (`@devops`, `@ai`, `@be`, `@fe`, `@tech-lead`) have any bash entitlement, and even
 they cannot push to remote — that requires explicit user authorization.
 
 **Scope summary:**
@@ -58,6 +58,7 @@ they cannot push to remote — that requires explicit user authorization.
 | `@ai` | allow | allow | allow | **deny** | none | none |
 | `@be` | allow | allow | allow | **deny** | allow | none |
 | `@fe` | allow | allow | allow | **deny** | allow | none |
+| `@tech-lead` | allow | allow | allow | **deny** | none | none |
 | Others | none | none | none | none | none | none |
 
 `git push *` is denied for every role. Pushes go through the GitHub API
@@ -95,7 +96,8 @@ The 6 hard rules in `_workflow.md` enforce:
 Skills are reusable instruction packs loaded on demand by agents:
 
 - **Domain skills**: NestJS, Next.js, React, TypeScript, Vite, Docker, etc.
-- **Cross-cutting skills**: accessibility, security, performance, code review
+- **Cross-cutting skills**: accessibility, security, performance, code review,
+  git-and-npm-hygiene (git, npm, and destructive-command rules for bash-enabled agents)
 - **Workflow skills**: spec-driven development, incremental implementation,
   planning & task breakdown, shipping & launch
 

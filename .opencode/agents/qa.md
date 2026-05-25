@@ -1,4 +1,5 @@
 ---
+name: qa
 description: >-
   QA Engineer. Owns the test strategy — turns acceptance criteria into a test
   plan and acceptance tests during design, then verifies the implementation and

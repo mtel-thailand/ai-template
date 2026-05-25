@@ -1,4 +1,5 @@
 ---
+name: tech-lead
 description: >-
   Tech Lead. Owns technical integrity from design through implementation and
   review. Produces architecture and ADRs, oversees BE/FE implementation,

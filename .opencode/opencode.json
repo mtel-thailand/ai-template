@@ -24,7 +24,7 @@
       "temperature": 0.2
     },
     "be": {
-      "model": "opencode/deepseek-v4-flash-free",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.1,
       "permission": {
         "bash": {
@@ -50,7 +50,7 @@
       }
     },
     "fe": {
-      "model": "opencode/deepseek-v4-flash-free",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.1,
       "permission": {
         "bash": {
@@ -80,7 +80,7 @@
       "temperature": 0.1
     },
     "qa": {
-      "model": "opencode/deepseek-v4-flash-free",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.1
     },
     "security": {
@@ -92,7 +92,7 @@
       "temperature": 0.2
     },
     "devops": {
-      "model": "opencode/deepseek-v4-flash-free",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.1,
       "permission": {
         "bash": {
@@ -100,6 +100,7 @@
           "git push --force *": "deny",
           "git remote add *": "deny",
           "git config --global *": "deny",
+          "docker *": "allow",
           "git *": "allow",
           "npm run *": "allow",
           "npm test*": "allow",
@@ -109,7 +110,7 @@
       }
     },
     "ai": {
-      "model": "opencode/deepseek-v4-flash-free",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.1,
       "permission": {
         "bash": {

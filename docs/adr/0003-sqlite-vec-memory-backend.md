@@ -65,7 +65,7 @@ deviations are called out explicitly below.
 | SQLite driver (Node) | `better-sqlite3` (sync, supports `load_extension`) | Brief §8 |
 | Vector type | `float[384]` | Brief §2 |
 | Lexical index | FTS5 external-content (`porter unicode61 remove_diacritics 2`) | Brief §3 |
-| Hybrid ranking | Weighted sum `1/(1+vec_dist)` · 0.7 + `bm25(fts)` · 0.3 (config-overridable) | Brief §3 |
+| Hybrid ranking | **Reciprocal Rank Fusion (RRF)**, `k=60` default, configurable via `memory.search.rrfK` (Cormack et al. 2009, SIGIR '09) | Brief §3 / Amendment 2026-05-25 |
 | Default embedding model | `sentence-transformers/all-MiniLM-L6-v2` (Apache-2.0, 384 dim, ~25 MB INT8 / ~80 MB FP32) | Brief §2 |
 | Documented upgrade model | `BAAI/bge-small-en-v1.5` (MIT, 384 dim, same schema) | Brief §2 |
 | Embedding runtime | `@huggingface/transformers` (transformers.js, ONNX Runtime CPU) | Brief §2 |
@@ -109,7 +109,7 @@ The `memory` section of `opencode.json`:
       }
     },
     "search": {
-      "hybridWeights": { "vector": 0.7, "lexical": 0.3 },
+      "rrfK": 60,
       "ftsTimeoutMs": 500,
       "annTrigger": {
         "corpusSize":   5000,
@@ -417,6 +417,20 @@ Throughput ~80–150 short notes/sec; 200-entry import < 10 s.
 
 ---
 
+## Decision Record
+
+### 2026-05-25 — Amend hybrid search to ratify RRF
+
+- **Change:** §Hybrid ranking (Stack table) and `memory.search` config block updated to specify **Reciprocal Rank Fusion (RRF)** as the fusion algorithm, replacing the weighted-sum sketch (`1/(1+vec_dist) · 0.7 + bm25(fts) · 0.3`) inherited from Brief §3.
+- **Citation:** Cormack, G. V., Clarke, C. L. A., & Büttcher, S. (2009). "Reciprocal rank fusion outperforms Condorcet and individual rank learning methods." *Proceedings of the 32nd International ACM SIGIR Conference on Research and Development in Information Retrieval* (SIGIR '09), pp. 758–759. ACM. DOI: 10.1145/1571941.1572114.
+- **Configurable parameter:** `memory.search.rrfK` (default `60`). Per Cormack et al. §3, the algorithm is robust across a wide `k` range; `60` is the canonical default reported in the original paper.
+- **Validation path:** Empirical recall@5 measurement is deferred to **#29** (memory bench harness). The ANN evaluation trigger in §NFR appendix continues to gate on `recall@5 < 0.85`; #29 owns the measurement methodology and instrumentation.
+- **Rationale:** ADR-impl drift reconciliation. PR #37 shipped RRF as the hybrid-search fusion strategy in `SqliteVecBackend.search()`. The ADR previously described a weighted-sum sketch that was never the intended ranking algorithm at implementation time. This amendment ratifies the shipped behaviour without changing code; PM ruling on Issue #49 selected Option 1 (docs/spec only). RRF is also the simpler interface for the pluggable-backend goal: PgVector and Qdrant adapters can apply RRF post-hoc over native vector/lexical results without sharing a scoring scale.
+- **Scope guardrails:** Other ADR sections, the threat model, and code are out of scope per Issue #49. Recall measurement methodology is owned by #29.
+- **References:** Issue #49, PR #37 @tech-lead Phase 2 review (ADR-vs-RRF reconciliation item).
+
+---
+
 ## References
 
 - Research Brief: `/docs/research/sqlite-vec-memory.md` (commit `f672651`)
@@ -433,6 +447,7 @@ Throughput ~80–150 short notes/sec; 200-entry import < 10 s.
 - transformers.js: https://huggingface.co/docs/transformers.js
 - SQLite WAL: https://www.sqlite.org/wal.html
 - SQLite FTS5: https://www.sqlite.org/fts5.html
+- Cormack, Clarke & Büttcher (2009), "Reciprocal rank fusion outperforms Condorcet and individual rank learning methods," SIGIR '09: https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf
 
 ---
 

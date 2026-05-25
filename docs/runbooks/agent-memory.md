@@ -11,7 +11,7 @@
 | `npm run memory:gc` | Full GC run: validate, budget check, evict, write back | 0 OK, 2 budget violation, 3 I/O error |
 | `npm run memory:gc:validate` | Validate only (phases 1–2) — safe for CI | 0 pass, 1 fail |
 | `npm run memory:gc:dry` | Preview mode — all phases, no writes | 0 OK, 2 budget violation |
-| `npm test` | Run GC test suite | 0 pass, 1 fail |
+| `npm test` | Run GC test suite (isolated from production vault via MEMORY_ROOT env var) | 0 pass, 1 fail |
 
 ## 2. Common Operations
 
@@ -99,15 +99,6 @@ Error: Cannot find module 'gray-matter'
 npm install
 ```
 
-### 3.4 `npm test` deleted my memory files
-
-**Known issue.** The current test suite destructively uses the real
-`.opencode/memory/` directory. Tracked as a follow-up bug. Until fixed:
-
-- Do NOT run `npm test` if you have real memory files you want to keep.
-- Back up `.opencode/memory/` before running the test suite locally.
-- CI runs are safe (no real files exist in the CI checkout).
-
 ## 4. Schedule
 
 | Cadence | Action | Who |
@@ -134,5 +125,5 @@ npm install
 - [Agent Memory Specification §6](../specs/agent-memory.md) — eviction rules
 - `.opencode/memory/` — vault root
 - `scripts/memory-gc.mjs` — the script
-- `scripts/memory-gc.test.mjs` — tests
-- `scripts/memory-gc.fixture/` — test fixture vault
+- `scripts/memory-gc.test.mjs` — tests (isolated via MEMORY_ROOT)
+- `scripts/memory-gc.fixture/` — fixture vault for manual smoke-testing

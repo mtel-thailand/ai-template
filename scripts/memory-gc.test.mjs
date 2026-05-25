@@ -83,9 +83,9 @@ name: valid-test-note
 description: A valid test note for GC validation
 tier: mid
 kind: episodic
-created: 2026-05-25
-updated: 2026-05-25
-last_accessed: 2026-05-25
+created: "2026-05-25"
+updated: "2026-05-25"
+last_accessed: "2026-05-25"
 access_count: 0
 importance: 3
 tags: [test]
@@ -100,9 +100,9 @@ name: permanent-arch-note
 description: Permanent architectural decision
 tier: long
 kind: semantic
-created: 2026-05-20
-updated: 2026-05-25
-last_accessed: 2026-05-25
+created: "2026-05-20"
+updated: "2026-05-25"
+last_accessed: "2026-05-25"
 access_count: 15
 importance: 5
 tags: [architecture, decision]
@@ -117,9 +117,9 @@ name: stale-mid-note
 description: A mid-tier note past its TTL
 tier: mid
 kind: working
-created: 2026-03-01
-updated: 2026-03-01
-last_accessed: 2026-03-15
+created: "2026-03-01"
+updated: "2026-03-01"
+last_accessed: "2026-03-15"
 access_count: 2
 importance: 2
 tags: [old, stale]
@@ -134,9 +134,9 @@ name: stale-forgettable-note
 description: A forgettable note past its TTL
 tier: forgettable
 kind: episodic
-created: 2026-04-01
-updated: 2026-04-01
-last_accessed: 2026-04-10
+created: "2026-04-01"
+updated: "2026-04-01"
+last_accessed: "2026-04-10"
 access_count: 1
 importance: 1
 tags: [old]
@@ -151,9 +151,9 @@ name: hot-cache-note
 description: Frequently accessed cache note
 tier: frequent
 kind: working
-created: 2026-05-25
-updated: 2026-05-25
-last_accessed: 2026-05-25
+created: "2026-05-25"
+updated: "2026-05-25"
+last_accessed: "2026-05-25"
 access_count: 50
 importance: 3
 tags: [hot, cache]
@@ -168,9 +168,9 @@ name: session-note
 description: Session-scoped temporary note
 tier: short
 kind: working
-created: 2026-05-25
-updated: 2026-05-25
-last_accessed: 2026-05-25
+created: "2026-05-25"
+updated: "2026-05-25"
+last_accessed: "2026-05-25"
 access_count: 1
 importance: 1
 tags: [session]
@@ -187,9 +187,9 @@ name: bad-schema-extra
 description: Has an extra field not in the 11-field schema
 tier: mid
 kind: episodic
-created: 2026-05-25
-updated: 2026-05-25
-last_accessed: 2026-05-25
+created: "2026-05-25"
+updated: "2026-05-25"
+last_accessed: "2026-05-25"
 access_count: 0
 importance: 3
 tags: []
@@ -205,8 +205,8 @@ name: bad-schema-missing
 description: Missing last_accessed field
 tier: mid
 kind: episodic
-created: 2026-05-25
-updated: 2026-05-25
+created: "2026-05-25"
+updated: "2026-05-25"
 access_count: 0
 importance: 3
 tags: []
@@ -221,9 +221,9 @@ name: Bad Name With Spaces
 description: Invalid name format
 tier: mid
 kind: episodic
-created: 2026-05-25
-updated: 2026-05-25
-last_accessed: 2026-05-25
+created: "2026-05-25"
+updated: "2026-05-25"
+last_accessed: "2026-05-25"
 access_count: 0
 importance: 3
 tags: []
@@ -238,9 +238,9 @@ name: bad-importance
 description: Importance out of range
 tier: mid
 kind: episodic
-created: 2026-05-25
-updated: 2026-05-25
-last_accessed: 2026-05-25
+created: "2026-05-25"
+updated: "2026-05-25"
+last_accessed: "2026-05-25"
 access_count: 0
 importance: 999
 tags: []
@@ -351,22 +351,7 @@ describe("memory-gc.mjs", () => {
       const files = {};
       for (let i = 0; i < 55; i++) {
         const idx = String(i).padStart(3, "0");
-        files[`mid/over-budget-${idx}.md`] = `---
-name: over-budget-${idx}
-description: Budget test note ${idx}
-tier: mid
-kind: working
-created: 2026-05-25
-updated: 2026-05-25
-last_accessed: 2026-05-25
-access_count: 0
-importance: 1
-tags: [test]
-links: []
----
-
-Budget test note ${idx}.
-`;
+        files[`mid/over-budget-${idx}.md`] = `---\nname: over-budget-${idx}\ndescription: Budget test note ${idx}\ntier: mid\nkind: working\ncreated: "2026-05-25"\nupdated: "2026-05-25"\nlast_accessed: "2026-05-25"\naccess_count: 0\nimportance: 1\ntags: [test]\nlinks: []\n---\n\nBudget test note ${idx}.\n`;
       }
       setupVault(files);
 

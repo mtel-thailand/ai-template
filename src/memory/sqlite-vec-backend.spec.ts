@@ -5,6 +5,7 @@ import { tmpdir } from 'os';
 import { randomUUID } from 'crypto';
 import { SqliteVecBackend } from './sqlite-vec-backend.js';
 import type { MemoryEntry, SearchOpts } from './backend.js';
+import { MemoryBackendInputError, DEFAULT_MEMORY_LIMITS } from './backend.js';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -292,6 +293,30 @@ describe('SqliteVecBackend', () => {
       const opts: SearchOpts = { query: 'Reindex', k: 5, mode: 'lexical' };
       const hits = await backend.search(opts);
       expect(hits.length).toBeGreaterThan(0);
+    });
+  });
+
+  // ── T-12 input caps ──────────────────────────────────────────────────
+
+  describe('T-12 input caps', () => {
+    it('rejects body just over maxBodyBytes with MemoryBackendInputError', async () => {
+      const entry = testEntry({
+        body: 'x'.repeat(DEFAULT_MEMORY_LIMITS.maxBodyBytes + 1),
+      });
+      await expect(backend.put(entry, randomEmbedding())).rejects.toThrow(MemoryBackendInputError);
+    });
+
+    it('accepts body exactly at maxBodyBytes', async () => {
+      const entry = testEntry({
+        body: 'x'.repeat(DEFAULT_MEMORY_LIMITS.maxBodyBytes),
+      });
+      await expect(backend.put(entry, randomEmbedding())).resolves.toBeUndefined();
+    });
+
+    it('rejects embedding just over maxEmbeddingDim with MemoryBackendInputError', async () => {
+      const entry = testEntry();
+      const oversized = new Float32Array(DEFAULT_MEMORY_LIMITS.maxEmbeddingDim + 1);
+      await expect(backend.put(entry, oversized)).rejects.toThrow(MemoryBackendInputError);
     });
   });
 

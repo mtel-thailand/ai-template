@@ -28,7 +28,9 @@ import type {
   SearchHit,
   SearchOpts,
   ReindexOpts,
+  MemoryLimits,
 } from './backend.js';
+import { validatePutInput, DEFAULT_MEMORY_LIMITS } from './backend.js';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -77,16 +79,23 @@ export class SqliteVecBackend implements MemoryBackend {
   /** Whether the sqlite-vec extension was successfully loaded. */
   public readonly vec0Available: boolean;
 
+  /** Caps enforced by `put()` (T-12). */
+  private readonly limits: MemoryLimits;
+
   /**
    * @param dbPath         Path to the SQLite database file.
    * @param extensionPath  Optional path to the sqlite-vec loadable extension.
    *                       If omitted, vector operations are gracefully degraded
    *                       (vector search returns empty, vec0 writes skipped).
+   * @param opts           Optional backend configuration.
+   *                       `opts.limits` overrides the T-12 input caps.
    */
   constructor(
     dbPath: string,
     extensionPath?: string,
+    opts?: { limits?: MemoryLimits },
   ) {
+    this.limits = opts?.limits ?? DEFAULT_MEMORY_LIMITS;
     this.db = new Database(dbPath);
 
     // ── PRAGMAs (C9) ──────────────────────────────────────────────────
@@ -137,6 +146,7 @@ export class SqliteVecBackend implements MemoryBackend {
   // ── put ───────────────────────────────────────────────────────────────
 
   async put(entry: MemoryEntry, embedding: Float32Array): Promise<void> {
+    validatePutInput(entry, embedding, this.limits);
     await withRetry(async () => {
       const txn = this.db.transaction(() => {
         // Upsert into entries table

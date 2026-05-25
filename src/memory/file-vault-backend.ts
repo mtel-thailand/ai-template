@@ -14,7 +14,8 @@
 import { readFileSync, writeFileSync, unlinkSync, existsSync, mkdirSync, readdirSync } from 'fs';
 import { join, resolve, sep } from 'path';
 import matter from 'gray-matter';
-import type { MemoryBackend, MemoryEntry, SearchHit, SearchOpts, ReindexOpts } from './backend.js';
+import type { MemoryBackend, MemoryEntry, SearchHit, SearchOpts, ReindexOpts, MemoryLimits } from './backend.js';
+import { validatePutInput, DEFAULT_MEMORY_LIMITS } from './backend.js';
 
 // ─── Backend ────────────────────────────────────────────────────────────────
 
@@ -22,12 +23,18 @@ export class FileVaultBackend implements MemoryBackend {
   /**
    * @param vaultDir  Root directory of the vault (e.g., `.opencode/memory/`).
    *                  Expected to contain subdirectories per tier.
+   * @param limits    T-12 input caps enforced by `put()`. Defaults to
+   *                  `DEFAULT_MEMORY_LIMITS` (100 KB body, 1024-dim embedding).
    */
-  constructor(private readonly vaultDir: string) {}
+  constructor(
+    private readonly vaultDir: string,
+    private readonly limits: MemoryLimits = DEFAULT_MEMORY_LIMITS,
+  ) {}
 
   // ── put ───────────────────────────────────────────────────────────────
 
   async put(entry: MemoryEntry, _embedding: Float32Array): Promise<void> {
+    validatePutInput(entry, _embedding, this.limits);
     const filePath = this._filePath(entry.name, entry.tier);
     const dir = resolve(filePath, '..');
     if (!existsSync(dir)) {

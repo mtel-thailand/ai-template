@@ -5,6 +5,7 @@ import { tmpdir } from 'os';
 import { randomUUID } from 'crypto';
 import { FileVaultBackend } from './file-vault-backend.js';
 import type { MemoryEntry, SearchOpts } from './backend.js';
+import { MemoryBackendInputError, DEFAULT_MEMORY_LIMITS } from './backend.js';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -180,6 +181,24 @@ describe('FileVaultBackend', () => {
   describe('reindex', () => {
     it('is a no-op (resolves)', async () => {
       await expect(backend.reindex()).resolves.toBeUndefined();
+    });
+  });
+
+  // ── T-12 input caps ──────────────────────────────────────────────────
+
+  describe('T-12 input caps', () => {
+    it('rejects body just over maxBodyBytes with MemoryBackendInputError', async () => {
+      const entry: MemoryEntry = {
+        ...testEntry('cap-over'),
+        body: 'x'.repeat(DEFAULT_MEMORY_LIMITS.maxBodyBytes + 1),
+      };
+      await expect(backend.put(entry, new Float32Array(0))).rejects.toThrow(MemoryBackendInputError);
+    });
+
+    it('rejects embedding just over maxEmbeddingDim with MemoryBackendInputError', async () => {
+      const entry = testEntry('emb-over');
+      const oversized = new Float32Array(DEFAULT_MEMORY_LIMITS.maxEmbeddingDim + 1);
+      await expect(backend.put(entry, oversized)).rejects.toThrow(MemoryBackendInputError);
     });
   });
 });

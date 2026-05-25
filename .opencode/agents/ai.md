@@ -76,7 +76,9 @@ build the agentic infrastructure the team works through.
 - Branch chore/<#>-<slug> or docs/<#>-<slug> from main.
 - Current state read end-to-end: opencode.json, the affected
   .opencode/agents/*.md, the affected skills.
-- For config changes: schema validated against https://opencode.ai/config.json.
+- For config changes: schema validated by fetching https://opencode.ai/docs/config/
+  (live docs) before every edit, cross-checking field names, enums, and defaults
+  against the published JSON Schema at https://opencode.ai/config.json.
 
 ## Definition of Done (before reporting complete)
 - Agent files / skills / config updated and consistent.
@@ -89,9 +91,60 @@ build the agentic infrastructure the team works through.
   authorization).
 
 ## Schema validation cadence
+- Before any opencode-config change, load the `customize-opencode` skill
+  AND fetch https://opencode.ai/docs/config/ to confirm field names,
+  required/optional status, valid enums, and default values.
 - Validate opencode.json against https://opencode.ai/config.json before
   every save.
 - If the schema rejects, do not commit. Fix or escalate.
+- When proposing config edits, include a "Schema check" note in your
+  response listing every field touched and confirming it matches the
+  live schema.
+
+## Schema-of-record — mandatory pre-flight for all opencode-config changes
+
+This section codifies the mandatory workflow for every opencode-config edit.
+It applies to any change touching:
+
+- `.opencode/opencode.json` or `.opencode/opencode.jsonc`
+- Any file under `.opencode/agents/*.md` (YAML frontmatter, tools, MCP bindings,
+  model selection, mode, temperature, etc.)
+- Any file under `.opencode/skills/**/SKILL.md` where opencode-specific fields
+  are touched
+- Any plugin, MCP server config, or permission rule
+- User-level opencode files under `~/.config/opencode/`
+
+### 1. Pre-flight: fetch the live schema docs
+
+Before proposing or applying any edit to opencode config, you **must**:
+1. Load the `customize-opencode` skill (for workflow guidance).
+2. Fetch https://opencode.ai/docs/config/ using the `webfetch` tool to confirm
+   field names, required/optional status, valid enums, and default values for
+   **every field you are about to touch**.
+
+Do not rely on memory or prior session knowledge of the schema — it can change.
+
+### 2. Cite the schema in your output
+
+When you propose an opencode-config edit, include a short **"Schema check"**
+note in your response that lists the specific fields you touched and confirms
+each one matches the live schema at https://opencode.ai/docs/config/. If a field
+is not documented there, flag it explicitly and ask the user before adding it.
+
+### 3. Cross-reference both sources
+
+The `customize-opencode` skill provides workflow guidance; the live URL
+(https://opencode.ai/docs/config/) is the source of truth for schema
+correctness. Use both. The formal JSON Schema at
+https://opencode.ai/config.json is the machine-readable authority for editor
+validation.
+
+### 4. Hot-reload reminder
+
+After any opencode-config change, remind the user that opencode does **NOT**
+hot-reload config — they must quit and restart opencode for changes to take
+effect. If only agent `.md` files changed (not opencode.json), the update takes
+effect on next load, but the restart message must still be posted.
 
 ## Least-privilege audit (run at least once per cycle)
 For each agent, ask:

@@ -111,14 +111,25 @@ export class SqliteVecBackend implements MemoryBackend {
     // FTS5 and vec0 are virtual tables; entries is a regular table.
     // If vec0 isn't loaded, we create a simple embedding table instead
     // so that put() with an embedding doesn't crash.
+    //
+    // We make all CREATE statements idempotent (IF NOT EXISTS) so that
+    // crash-recovery tests can close + reopen without "table already exists"
+    // errors.
 
-    // Always create entries and FTS5
-    this.db.exec(SCHEMA_SQL.replace(
+    let ddl = SCHEMA_SQL
+      .replace(/^(CREATE TABLE entries)\b/m, 'CREATE TABLE IF NOT EXISTS entries')
+      .replace(/^(CREATE INDEX entries_tier_idx)\b/m, 'CREATE INDEX IF NOT EXISTS entries_tier_idx')
+      .replace(/^(CREATE VIRTUAL TABLE entries_fts)\b/m, 'CREATE VIRTUAL TABLE IF NOT EXISTS entries_fts')
+      .replace(/^(CREATE TRIGGER )/gm, 'CREATE TRIGGER IF NOT EXISTS ');
+
+    ddl = ddl.replace(
       /CREATE VIRTUAL TABLE entries_vec USING vec0 \([\s\S]*?\);/,
       vec0Loaded
-        ? 'CREATE VIRTUAL TABLE entries_vec USING vec0 (id INTEGER PRIMARY KEY, embedding float[384]);'
+        ? 'CREATE VIRTUAL TABLE IF NOT EXISTS entries_vec USING vec0 (id INTEGER PRIMARY KEY, embedding float[384]);'
         : 'CREATE TABLE IF NOT EXISTS entries_vec (id INTEGER PRIMARY KEY, embedding BLOB);',
-    ));
+    );
+
+    this.db.exec(ddl);
 
     this.vec0Available = vec0Loaded;
   }

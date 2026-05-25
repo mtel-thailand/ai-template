@@ -1,7 +1,7 @@
 # Agent Memory Subsystem — Specification
 
 > **Status:** Approved (design gate pass — Issue #15)
-> **Follow-up tickets:** GC script — #16; pre-commit secret-scrub hook — TBD
+> **Follow-up tickets:** GC script — #16; pre-commit secret-scrub hook — #33
 > **Canonical spec for:** `.opencode/memory/` layout, tier semantics, frontmatter schema, retrieval flow, eviction rules, and security policy.
 
 ---
@@ -165,7 +165,14 @@ Memory is **shared across the entire squad** — a single vault, not per-role na
 
 Secrets, credentials, tokens, API keys, and PII are **strictly forbidden** in all memory files. This is a hard policy rule, not a recommendation.
 
-A regex-based pre-commit scrub hook is planned as a **follow-up ticket** (not implemented here). Until then, enforcement is by agent discipline and PR review.
+### Two-layer enforcement
+
+Enforcement of the secret policy operates at two layers:
+
+1. **Pre-commit** (`lefthook`) — runs `node .lefthook/scripts/secret-scan.mjs` against staged files under `.opencode/memory/**`. Uses the shared pattern module `scripts/memory-secret-patterns.mjs` (single source of truth). Bypassable with `git commit --no-verify` as a deliberate emergency escape — see the [runbook](../runbooks/agent-memory.md) for appropriate use.
+2. **CI** (`memory:lint`) — runs the same pattern module against JSONL exports in pull requests. Per ADR-0003 §SR6. The pre-commit bypass does NOT bypass this layer; the CI guard remains in place.
+
+Pattern modifications require security review (the regex set is a controlled artifact — see threat-model T-03).
 
 ---
 

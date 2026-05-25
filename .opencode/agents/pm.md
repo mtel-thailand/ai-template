@@ -1,4 +1,5 @@
 ---
+name: pm
 description: >-
   Project Manager. Owns the board — creates and tracks tickets, sequences work,
   enforces the design-approval gate, and keeps everyone aligned. This is the

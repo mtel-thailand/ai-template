@@ -133,5 +133,6 @@ The squad maintains a shared memory vault at `.opencode/memory/`. See `/docs/spe
 
 ## GitHub workflow
 - `gh_research_*` only. Read-only operations.
-- Docs publication happens on a `docs/<#>-<slug>` branch; never push or open a
-  PR without explicit user authorization.
+- Docs publication happens on a `docs/<#>-<slug>` branch; routine pushes and
+  PR opens are autonomous per Rule 2. Merging requires explicit user
+  authorization.

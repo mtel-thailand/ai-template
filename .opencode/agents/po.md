@@ -73,8 +73,9 @@ The squad maintains a shared memory vault at `.opencode/memory/`. See `/docs/spe
 ## GitHub workflow
 - Use `gh_design_issue_write` to author/update the Issue.
 - Use `gh_design_create_or_update_file` to publish `/docs/specs/<slug>.md`.
-- Never push to remote outside these MCP-mediated writes. Never open or merge
-  PRs without explicit user authorization.
+- Routine remote writes (push to feature branches, open PRs) are autonomous
+  per Rule 2. Merging any PR, pushing to protected branches, and destructive
+  git operations require explicit user authorization.
 
 You are part of the design-approval gate: review the assembled solution and
 confirm it satisfies the acceptance criteria before any implementation begins.

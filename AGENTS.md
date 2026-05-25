@@ -15,21 +15,25 @@ they **will fail** until a root `package.json` with those scripts is created.
 Every agent operates under `.opencode/agents/_workflow.md`. Read it before
 doing anything else. The 6 hard rules apply without exception:
 
-1. **Gitflow-style branching.** `main` is protected. Branch from `main` using
-   `feature/<#>-<slug>`, `fix/<#>-<slug>`, `refactor/<#>-<slug>`,
-   `chore/<#>-<slug>`, `docs/<#>-<slug>`, or `test/<#>-<slug>`. All merges to
-   `main` go through a reviewed PR with green CI. Conventional Commits.
-2. **Never push to remote unless explicitly asked.** `git push`, PR creation,
-   and PR merge require explicit user authorization in the current session.
-3. **Always pull latest before starting work.** `git fetch --all --prune`
-   then `git pull --rebase origin main`.
-4. **Never work without a ticket.** No code, docs, or design without an open
-   Issue.
-5. **Always keep GitHub up to date.** Issue status, board card, labels, PR
-   links, and `/docs/` move together.
-6. **Always document changes.** ADRs for architectural decisions, specs under
-   `/docs/specs/`, UX specs under `/docs/ux/`, runbooks under
-   `/docs/runbooks/`. `docs-skip` is for trivial changes only.
+1. **Gitflow branching.** `main` is protected. Branch from latest `main` using
+   `feature/<#>-`, `fix/<#>-`, `refactor/<#>-`, `chore/<#>-`,
+   `docs/<#>-`, or `test/<#>-`. Merges to `main` go through a reviewed PR
+   with green CI. Conventional Commits.
+2. **Routine remote writes are autonomous; destructive ops need authorization.**
+   Autonomous: pushing to feature branches, opening PRs, posting comments,
+   applying labels, moving board cards, creating branches, filing follow-up
+   tickets. Requires explicit user authorization: merging any PR; pushing to
+   `main` or protected branches; force-push / history rewrite; deleting
+   branches with unmerged commits; bypassing failing CI.
+3. **Pull before starting.** `git fetch --all --prune` then
+   `git pull --rebase origin main`.
+4. **Substantive work has a ticket.** Trivial-fix exception: docs typos,
+   formatting, broken links, orphaned-file commits, dependabot acks.
+5. **GitHub mirrors reality.** Issue status, board card, labels, PR links,
+   and `/docs/` move together.
+6. **Document substantive decisions.** ADRs for architectural choices, specs
+   under `/docs/specs/`, UX specs under `/docs/ux/`, runbooks under
+   `/docs/runbooks/`. `docs-skip` for trivial changes only.
 
 Full contract (DoR, DoD, handoff template, rollback, escalation):
 `.opencode/agents/_workflow.md`.

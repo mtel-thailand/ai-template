@@ -1,4 +1,4 @@
-# ai-todo — opencode team template
+# ai-template — opencode team template
 
 > A pre-wired multi-agent AI development squad template. Powered by opencode with 11 AI agent roles — GitHub is the work management layer (issues, board, PRs, Pages).
 

@@ -86,12 +86,12 @@ describe('SqliteVecBackend crash recovery', () => {
       emb[0] = 0.42;
 
       // First session: write and close
-      const backend1 = new SqliteVecBackend(dbPath);
+      const backend1 = await SqliteVecBackend.create(dbPath);
       await backend1.put(entry, emb);
       backend1.close();
 
       // Simulate crash-restart: open a new connection to the same DB
-      const backend2 = new SqliteVecBackend(dbPath);
+      const backend2 = await SqliteVecBackend.create(dbPath);
       const retrieved = await backend2.get(entry.name);
       expect(retrieved).not.toBeNull();
       expect(retrieved!.body).toBe(entry.body);
@@ -104,8 +104,8 @@ describe('SqliteVecBackend crash recovery', () => {
       backend2.close();
     });
 
-    it('WAL mode is set on first open', () => {
-      const backend = new SqliteVecBackend(dbPath);
+    it('WAL mode is set on first open', async () => {
+      const backend = await SqliteVecBackend.create(dbPath);
       const mode = backend.db.pragma('journal_mode', { simple: true });
       expect(mode).toBe('wal');
       backend.close();
@@ -113,7 +113,7 @@ describe('SqliteVecBackend crash recovery', () => {
 
     it('multiple put/get cycles survive close + reopen', async () => {
       const names = ['a', 'b', 'c'];
-      const backend1 = new SqliteVecBackend(dbPath);
+      const backend1 = await SqliteVecBackend.create(dbPath);
 
       for (const n of names) {
         await backend1.put(
@@ -123,7 +123,7 @@ describe('SqliteVecBackend crash recovery', () => {
       }
       backend1.close();
 
-      const backend2 = new SqliteVecBackend(dbPath);
+      const backend2 = await SqliteVecBackend.create(dbPath);
       for (const n of names) {
         const retrieved = await backend2.get(n);
         expect(retrieved).not.toBeNull();
@@ -137,7 +137,7 @@ describe('SqliteVecBackend crash recovery', () => {
 
   describe('entry deletion cascades', () => {
     it('delete removes the entries row', async () => {
-      const backend = new SqliteVecBackend(dbPath);
+      const backend = await SqliteVecBackend.create(dbPath);
       const entry = testEntry('cascade-test');
       await backend.put(entry, new Float32Array(384));
 
@@ -156,7 +156,7 @@ describe('SqliteVecBackend crash recovery', () => {
     });
 
     it('FTS5 entries are removed after delete (via entries_ad trigger)', async () => {
-      const backend = new SqliteVecBackend(dbPath);
+      const backend = await SqliteVecBackend.create(dbPath);
       const entry = testEntry('fts-cascade');
       await backend.put(entry, new Float32Array(384));
 
@@ -178,7 +178,7 @@ describe('SqliteVecBackend crash recovery', () => {
     });
 
     it('entries_vec row survives delete (no FK trigger — cleaned by gc repair)', async () => {
-      const backend = new SqliteVecBackend(dbPath);
+      const backend = await SqliteVecBackend.create(dbPath);
       const entry = testEntry('vec-linger');
       await backend.put(entry, new Float32Array(384));
 
@@ -203,7 +203,7 @@ describe('SqliteVecBackend crash recovery', () => {
 
   describe('orphan entry detection (T-09)', () => {
     it('can detect vec0 rows with no matching entries row', async () => {
-      const backend = new SqliteVecBackend(dbPath);
+      const backend = await SqliteVecBackend.create(dbPath);
 
       // Insert a normal entry first
       const entry = testEntry('normal-entry');
@@ -230,7 +230,7 @@ describe('SqliteVecBackend crash recovery', () => {
     });
 
     it('normal entries are not flagged as orphans', async () => {
-      const backend = new SqliteVecBackend(dbPath);
+      const backend = await SqliteVecBackend.create(dbPath);
 
       await backend.put(
         testEntry('orphan-free-1'),
@@ -253,7 +253,7 @@ describe('SqliteVecBackend crash recovery', () => {
     });
 
     it('transactional put prevents orphans (T-09 mitigation)', async () => {
-      const backend = new SqliteVecBackend(dbPath);
+      const backend = await SqliteVecBackend.create(dbPath);
 
       // We cannot simulate a crash in-process, but we can verify that
       // the put operation succeeds in creating a consistent state:

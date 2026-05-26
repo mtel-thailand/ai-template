@@ -18,10 +18,14 @@
 
 import Database from 'better-sqlite3';
 import type { BetterSqlite3Database } from 'better-sqlite3';
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { withRetry, isSQLiteBusyError } from './sqlite-retry.js';
+import {
+  verifyExtensionIntegrity,
+  IntegrityVerificationError,
+} from './integrity-verifier.js';
 import type {
   MemoryBackend,
   MemoryEntry,
@@ -68,8 +72,49 @@ interface Vec0Row {
 const UNSPECIFIED_EMBED_MODEL_ID = 'unspecified';
 const DEFAULT_EMBED_MODEL_VER = '1';
 
+/** Default FTS5 query timeout (SR5) in ms. Per ADR-0003 §Configuration. */
+const DEFAULT_FTS_TIMEOUT_MS = 500;
+
 // __dirname polyfill for ESM
 const _dirname = dirname(fileURLToPath(import.meta.url));
+
+// ─── Errors ─────────────────────────────────────────────────────────────────
+
+/**
+ * Thrown when the SR4 sqlite-vec extension SHA-256 verification fails or
+ * when the backend cannot enforce its fail-closed integrity contract.
+ *
+ * Per ADR-0003 SR4: verification runs BEFORE `new Database()` so the
+ * connection is never opened on failure. No `.db`, `.db-wal`, or `.db-shm`
+ * sidecars linger after the throw (C10 — no partial state on rejection).
+ *
+ * Extends `IntegrityVerificationError` so callers may catch either.
+ */
+export class MemoryBackendIntegrityError extends IntegrityVerificationError {
+  override readonly name = 'MemoryBackendIntegrityError';
+}
+
+// ─── Options ────────────────────────────────────────────────────────────────
+
+export interface SqliteVecBackendOptions {
+  /** Override the T-12 input caps for `put()`. */
+  limits?: MemoryLimits;
+  /** Embedder whose `modelId` is recorded in each row's `embed_model_id`. */
+  embedder?: Embedder;
+  /** FTS5 query timeout in ms (SR5). Default 500 ms. */
+  ftsTimeoutMs?: number;
+}
+
+export interface SqliteVecBackendCreateOptions extends SqliteVecBackendOptions {
+  /**
+   * Path to the sqlite-vec loadable extension binary. When provided,
+   * `extensionLockPath` MUST also be provided so SR4 SHA-256 verification
+   * can run before any `load_extension` call. Fail-closed.
+   */
+  extensionPath?: string;
+  /** Path to the `sqlite-vec.lock` file holding the per-platform SHA-256. */
+  extensionLockPath?: string;
+}
 
 // ─── Backend ────────────────────────────────────────────────────────────────
 
@@ -83,7 +128,13 @@ export class SqliteVecBackend implements MemoryBackend {
   public readonly db: BetterSqlite3Database;
 
   /** Whether the sqlite-vec extension was successfully loaded. */
-  public readonly vec0Available: boolean;
+  private _vec0Available = false;
+  public get vec0Available(): boolean {
+    return this._vec0Available;
+  }
+
+  /** FTS5 query timeout in ms (SR5). Per ADR-0003 §Configuration. */
+  public readonly ftsTimeoutMs: number;
 
   /** Caps enforced by `put()` (T-12). */
   private readonly limits: MemoryLimits;
@@ -97,22 +148,25 @@ export class SqliteVecBackend implements MemoryBackend {
   private readonly embedder: Embedder | undefined;
 
   /**
-   * @param dbPath         Path to the SQLite database file.
-   * @param extensionPath  Optional path to the sqlite-vec loadable extension.
-   *                       If omitted, vector operations are gracefully degraded
-   *                       (vector search returns empty, vec0 writes skipped).
-   * @param opts           Optional backend configuration.
-   *                       `opts.limits`    overrides the T-12 input caps.
-   *                       `opts.embedder`  Embedder whose `modelId` is recorded
-   *                                        in each row's `embed_model_id`.
+   * Synchronous constructor — opens the DB and applies PRAGMAs only. The
+   * schema (DDL) is NOT created here, and the sqlite-vec extension is NOT
+   * loaded here.
+   *
+   * Callers MUST use {@link SqliteVecBackend.create} so the SR4 SHA-256
+   * verification of the extension binary can run BEFORE any `load_extension`
+   * call. Direct `new SqliteVecBackend()` is an internal primitive that
+   * `create()` composes; it leaves the instance without a schema.
+   *
+   * @internal
+   * @param dbPath  Path to the SQLite database file.
+   * @param opts    Optional backend configuration. See
+   *                {@link SqliteVecBackendOptions}.
    */
-  constructor(
-    dbPath: string,
-    extensionPath?: string,
-    opts?: { limits?: MemoryLimits; embedder?: Embedder },
-  ) {
+  constructor(dbPath: string, opts?: SqliteVecBackendOptions) {
     this.limits = opts?.limits ?? DEFAULT_MEMORY_LIMITS;
     this.embedder = opts?.embedder;
+    this.ftsTimeoutMs = opts?.ftsTimeoutMs ?? DEFAULT_FTS_TIMEOUT_MS;
+
     this.db = new Database(dbPath);
 
     // ── PRAGMAs (C9) ──────────────────────────────────────────────────
@@ -121,27 +175,105 @@ export class SqliteVecBackend implements MemoryBackend {
     this.db.pragma('busy_timeout = 5000');
     this.db.pragma('foreign_keys = ON');
     this.db.pragma('temp_store = MEMORY');
+  }
 
-    // ── Load extension ────────────────────────────────────────────────
-    let vec0Loaded = false;
-    if (extensionPath && existsSync(extensionPath)) {
+  /**
+   * Static async factory. Use this instead of `new SqliteVecBackend()`.
+   *
+   * Sequence:
+   *   1. If `opts.extensionPath` is provided, validate that
+   *      `opts.extensionLockPath` is also provided (fail-closed otherwise).
+   *   2. Run SR4 SHA-256 verification on the extension binary BEFORE any
+   *      DB connection is opened. On failure, throw
+   *      `MemoryBackendIntegrityError` — no `.db`, `.db-wal`, or `.db-shm`
+   *      sidecars are created because the verifier runs before
+   *      `new Database()`.
+   *   3. Open the DB connection and apply PRAGMAs (via the synchronous
+   *      constructor).
+   *   4. Call `load_extension` on the verified binary. If this fails after
+   *      a successful SHA verification, close the DB and throw.
+   *   5. Create the schema with the real `vec0` virtual table when the
+   *      extension is loaded, or with a BLOB fallback table otherwise.
+   *
+   * @throws MemoryBackendIntegrityError on SR4 verification failure or when
+   *         `extensionPath` is provided without `extensionLockPath`. The
+   *         exception leaves zero side effects (C10 — no partial state on
+   *         rejection).
+   */
+  static async create(
+    dbPath: string,
+    opts?: SqliteVecBackendCreateOptions,
+  ): Promise<SqliteVecBackend> {
+    // ── SR4: verify BEFORE opening any DB connection ──────────────────
+    // Running the verifier before `new Database()` guarantees that a
+    // verification failure leaves no `.db`, `.db-wal`, or `.db-shm` files
+    // on disk (security recommendation #3 from #47 sign-off).
+    if (opts?.extensionPath) {
+      if (!opts.extensionLockPath) {
+        throw new MemoryBackendIntegrityError(
+          'SR4: extensionPath provided without extensionLockPath. ' +
+            'Fail-closed — refusing to load_extension without SHA-256 ' +
+            'verification.',
+        );
+      }
+      let result;
       try {
-        this.db.loadExtension(resolve(extensionPath));
-        vec0Loaded = true;
-      } catch {
-        // Silently degrade — vector ops will be no-ops
+        result = await verifyExtensionIntegrity(
+          opts.extensionLockPath,
+          opts.extensionPath,
+        );
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        throw new MemoryBackendIntegrityError(
+          `SR4 verifier error reading ${opts.extensionLockPath}: ${message}`,
+        );
+      }
+      if (!result.ok) {
+        throw new MemoryBackendIntegrityError(
+          `SR4: sqlite-vec extension SHA-256 verification failed ` +
+            `(platform=${result.platformKey ?? 'unknown'}): ${result.message}. ` +
+            'No load_extension issued; no DB connection opened.',
+        );
       }
     }
 
-    // ── Create tables ─────────────────────────────────────────────────
-    // FTS5 and vec0 are virtual tables; entries is a regular table.
-    // If vec0 isn't loaded, we create a simple embedding table instead
-    // so that put() with an embedding doesn't crash.
-    //
-    // We make all CREATE statements idempotent (IF NOT EXISTS) so that
-    // crash-recovery tests can close + reopen without "table already exists"
-    // errors.
+    // ── Open DB + PRAGMAs ─────────────────────────────────────────────
+    const inst = new SqliteVecBackend(dbPath, opts);
 
+    // ── Load the verified extension (if any) ──────────────────────────
+    let vec0Loaded = false;
+    if (opts?.extensionPath) {
+      try {
+        inst.db.loadExtension(resolve(opts.extensionPath));
+        vec0Loaded = true;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        try {
+          inst.db.close();
+        } catch {
+          /* close errors during teardown are non-fatal */
+        }
+        throw new MemoryBackendIntegrityError(
+          `load_extension failed after SR4 SHA-256 verification passed: ${message}`,
+        );
+      }
+    }
+
+    // ── Initialize schema ─────────────────────────────────────────────
+    inst._initSchema(vec0Loaded);
+    return inst;
+  }
+
+  /**
+   * Create the entries / entries_fts / entries_vec tables, indexes, and
+   * triggers. When `vec0Loaded` is `true`, `entries_vec` is created as a
+   * `vec0` virtual table; otherwise a plain BLOB fallback table is created
+   * so `put()` does not crash.
+   *
+   * All CREATEs are idempotent (`IF NOT EXISTS`) so crash-recovery tests
+   * can close + reopen without "table already exists" errors.
+   */
+  private _initSchema(vec0Loaded: boolean): void {
     let ddl = SCHEMA_SQL
       .replace(/^(CREATE TABLE entries)\b/m, 'CREATE TABLE IF NOT EXISTS entries')
       .replace(/^(CREATE INDEX entries_tier_idx)\b/m, 'CREATE INDEX IF NOT EXISTS entries_tier_idx')
@@ -156,8 +288,7 @@ export class SqliteVecBackend implements MemoryBackend {
     );
 
     this.db.exec(ddl);
-
-    this.vec0Available = vec0Loaded;
+    this._vec0Available = vec0Loaded;
   }
 
   // ── put ───────────────────────────────────────────────────────────────

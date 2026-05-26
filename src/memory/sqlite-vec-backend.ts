@@ -22,6 +22,7 @@ import { readFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { withRetry, isSQLiteBusyError } from './sqlite-retry.js';
+import { withFtsTimeout } from './fts-wrapper.js';
 import {
   verifyExtensionIntegrity,
   IntegrityVerificationError,
@@ -413,6 +414,8 @@ export class SqliteVecBackend implements MemoryBackend {
     return withRetry(async () => {
       const mode = opts.mode ?? 'hybrid';
       const embed = opts.embedding;
+      // SR5: per-query FTS5 timeout. Caller may override via SearchOpts.
+      const ftsTimeoutMs = opts.timeoutMs ?? this.ftsTimeoutMs;
 
       // Tier filter clause
       let tierFilter = '';
@@ -430,18 +433,18 @@ export class SqliteVecBackend implements MemoryBackend {
       }
 
       if (mode === 'lexical') {
-        return this._lexicalSearch(opts.query, opts.k, tierFilter, tierParams);
+        return this._lexicalSearch(opts.query, opts.k, tierFilter, tierParams, ftsTimeoutMs);
       }
 
       // Hybrid: combine vector + lexical with weighted fusion
       if (mode === 'hybrid') {
         if (embed && this.vec0Available) {
           return this._hybridSearch(
-            opts.query, embed, opts.k, tierFilter, tierParams,
+            opts.query, embed, opts.k, tierFilter, tierParams, ftsTimeoutMs,
           );
         }
         // Fallback to lexical if vector not available
-        return this._lexicalSearch(opts.query, opts.k, tierFilter, tierParams);
+        return this._lexicalSearch(opts.query, opts.k, tierFilter, tierParams, ftsTimeoutMs);
       }
 
       return [];
@@ -472,12 +475,25 @@ export class SqliteVecBackend implements MemoryBackend {
 
   // ── Private search methods ───────────────────────────────────────────
 
-  private _lexicalSearch(
+  /**
+   * Execute a lexical-only FTS5 search.
+   *
+   * SR5: the FTS5 query is wrapped in {@link withFtsTimeout} so a hanging
+   * query rejects with {@link FtsTimeoutError} rather than blocking
+   * indefinitely. Per ADR-0003 §Configuration the default is 500 ms; the
+   * caller can override via `SearchOpts.timeoutMs` (which `search()`
+   * plumbs through).
+   *
+   * On timeout the wrapper rejects — no partial result array is returned
+   * (C10 — no partial state on rejection).
+   */
+  private async _lexicalSearch(
     query: string,
     k: number,
     tierFilter: string,
     tierParams: string[],
-  ): SearchHit[] {
+    timeoutMs: number,
+  ): Promise<SearchHit[]> {
     // Sanitize FTS5 query — remove special characters and wrap in double quotes
     // for safety (Security req 5: phrase-quote user input by default)
     const ftsQuery = this._sanitizeFtsQuery(query);
@@ -492,11 +508,15 @@ export class SqliteVecBackend implements MemoryBackend {
       LIMIT ?
     `;
 
-    const rows = this.db.prepare(sql).all(
-      ftsQuery,
-      ...tierParams,
-      k,
-    ) as (EntryRow & { bm25_score: number })[];
+    const rows = await withFtsTimeout(
+      async () =>
+        this.db.prepare(sql).all(
+          ftsQuery,
+          ...tierParams,
+          k,
+        ) as (EntryRow & { bm25_score: number })[],
+      { timeoutMs },
+    );
 
     return rows.map((row) => ({
       entry: rowToEntry(row),
@@ -536,19 +556,31 @@ export class SqliteVecBackend implements MemoryBackend {
     }));
   }
 
-  private _hybridSearch(
+  /**
+   * Hybrid search: combine FTS5 (lexical) + vec0 (vector) candidates via
+   * Reciprocal Rank Fusion.
+   *
+   * SR5: the FTS5 leg runs FIRST and is wrapped in {@link withFtsTimeout}.
+   * On lexical timeout the entire search rejects with
+   * {@link FtsTimeoutError} — vector hits are NOT returned standalone
+   * (C10 — no partial state on rejection, no silent degrade of the
+   * ranking guarantee).
+   */
+  private async _hybridSearch(
     query: string,
     embedding: Float32Array,
     k: number,
     tierFilter: string,
     tierParams: string[],
-  ): SearchHit[] {
+    timeoutMs: number,
+  ): Promise<SearchHit[]> {
     const ftsQuery = this._sanitizeFtsQuery(query);
 
     // Hybrid: retrieve more candidates from each method, then fuse
     const candidateK = Math.min(k * 3, 100);
 
-    // Lexical candidates
+    // Lexical candidates — wrapped in withFtsTimeout (SR5). Runs BEFORE the
+    // vector leg so a lexical timeout aborts before any vec0 SQL is prepared.
     const lexicalSql = `
       SELECT e.*, fts.rank AS bm25_score
       FROM entries_fts fts
@@ -558,11 +590,15 @@ export class SqliteVecBackend implements MemoryBackend {
       ORDER BY bm25
       LIMIT ?
     `;
-    const lexicalRows = this.db.prepare(lexicalSql).all(
-      ftsQuery,
-      ...tierParams,
-      candidateK,
-    ) as (EntryRow & { bm25_score: number })[];
+    const lexicalRows = await withFtsTimeout(
+      async () =>
+        this.db.prepare(lexicalSql).all(
+          ftsQuery,
+          ...tierParams,
+          candidateK,
+        ) as (EntryRow & { bm25_score: number })[],
+      { timeoutMs },
+    );
 
     // Vector candidates
     const vectorSql = `

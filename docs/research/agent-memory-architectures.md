@@ -1,3 +1,8 @@
+---
+title: "Research Brief — LLM Agent Memory Architectures"
+status: archived
+---
+
 # Research Brief — LLM Agent Memory Architectures
 
 **Question:** What does industry standard look like for tiered, markdown-vault agent memory, and what should we recommend to the Tech Lead drafting an ADR?

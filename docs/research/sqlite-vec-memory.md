@@ -3,7 +3,7 @@ title: SQLite + sqlite-vec as Default Memory Backend
 date: 2026-05-25
 author: "@researcher"
 issue: 25
-status: draft
+status: archived
 ---
 
 > **Status:** Draft — gates ADR-0003. Tech Lead, Security, SRE, and PO must

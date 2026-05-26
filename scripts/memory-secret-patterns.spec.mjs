@@ -11,7 +11,7 @@ import assert from "node:assert/strict";
 import { PATTERNS, scan } from "./memory-secret-patterns.mjs";
 
 
-// ─── Contract tests ────────────────────────────────────────────────────────
+// ─── Contract tests ──────────────────────────────────────────────────────────
 
 describe("PATTERNS export contract", () => {
   it("is a frozen array", () => {
@@ -50,7 +50,7 @@ describe("PATTERNS export contract", () => {
   });
 });
 
-// ─── scan() contract tests ────────────────────────────────────────────────
+// ─── scan() contract tests ─────────────────────────────────────────────────────
 
 describe("scan() export contract", () => {
   it("is a function", () => {
@@ -98,7 +98,7 @@ describe("scan() export contract", () => {
   });
 });
 
-// ─── Pattern-level positive/negative tests ─────────────────────────────────
+// ─── Pattern-level positive/negative tests ──────────────────────────────────────────
 
 describe("pattern positive matches", () => {
   for (const pattern of PATTERNS) {
@@ -128,7 +128,7 @@ describe("pattern negative controls", () => {
   }
 });
 
-// ─── scan() integration tests ──────────────────────────────────────────────
+// ─── scan() integration tests ───────────────────────────────────────────────────────
 
 describe("scan() integration", () => {
   it("detects multiple patterns in mixed text", () => {
@@ -183,7 +183,7 @@ describe("scan() integration", () => {
   });
 });
 
-// ─── Hedge: verify there are no lingering false positives ─────────────────
+// ─── Hedge: verify there are no lingering false positives ─────────────────────
 
 describe("false positive resistance", () => {
   it("does not flag 'key' context without ≥ 32-char value", () => {
@@ -201,7 +201,87 @@ describe("false positive resistance", () => {
   });
 });
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── #72 regression — SHA-256 hex must not match email-phone-pii ──────────────────
+//
+// Locked-artifact pattern change (#72): the phone subpattern of
+// `email-phone-pii` was matching digit runs inside placeholder SHA-256
+// hashes inside `.opencode/memory/embeddings.lock` and `sqlite-vec.lock`,
+// blocking lefthook pre-commit on PR #65. These tests exist to make a
+// regression loud and obvious.
+
+describe("#72 regression — SHA-256 hex must not match email-phone-pii", () => {
+  const SHA_ALL_ZERO = "0".repeat(64);
+  const SHA_MIXED =
+    "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
+  const LOCK_FILE_LINE_ALL_ZERO =
+    "0000000000000000000000000000000000000000000000000000000000000000  model.onnx";
+  const LOCK_FILE_LINE_MIXED =
+    "deadbeefcafebabe1234567890abcdef1234567890abcdef1234567890abcdef  darwin-arm64";
+  const LOCK_FILE_BODY = [
+    "# embeddings.lock — SHA-256 records for ONNX model weight files (SR3)",
+    "",
+    "# Quantization: fp32",
+    `${SHA_ALL_ZERO}  model.onnx`,
+    "",
+    "# Quantization: fp16",
+    `${SHA_ALL_ZERO}  model_fp16.onnx`,
+    "",
+    "# Quantization: q8 / q4",
+    `${SHA_ALL_ZERO}  model_quantized.onnx`,
+  ].join("\n");
+
+  function emailPhoneMatches(text) {
+    return scan(text).filter((r) => r.patternId === "email-phone-pii");
+  }
+
+  it("does not match an all-zero SHA-256 hex string", () => {
+    assert.equal(emailPhoneMatches(SHA_ALL_ZERO).length, 0);
+  });
+
+  it("does not match a mixed-case SHA-256 hex string", () => {
+    assert.equal(emailPhoneMatches(SHA_MIXED).length, 0);
+  });
+
+  it("does not match an embeddings.lock-shaped line (all-zero hash)", () => {
+    assert.equal(emailPhoneMatches(LOCK_FILE_LINE_ALL_ZERO).length, 0);
+  });
+
+  it("does not match a sqlite-vec.lock-shaped line (mixed hex)", () => {
+    assert.equal(emailPhoneMatches(LOCK_FILE_LINE_MIXED).length, 0);
+  });
+
+  it("does not match a synthetic multi-line lock-file body", () => {
+    assert.equal(emailPhoneMatches(LOCK_FILE_BODY).length, 0);
+  });
+
+  // ── Regression guards — normal PII must still flag ─────────────────────────────
+
+  it("still matches a real email embedded in prose", () => {
+    const text = "Please ping user@example.com about the change.";
+    assert.ok(
+      emailPhoneMatches(text).length > 0,
+      "Expected email-phone-pii to still match a normal email",
+    );
+  });
+
+  it("still matches a real US phone number embedded in prose", () => {
+    const text = "Please call me at +1-555-123-4567 tomorrow.";
+    assert.ok(
+      emailPhoneMatches(text).length > 0,
+      "Expected email-phone-pii to still match a normal phone number",
+    );
+  });
+
+  it("still matches an international phone number with separators", () => {
+    const text = "Call number: +44 020 7946 0958 (London desk).";
+    assert.ok(
+      emailPhoneMatches(text).length > 0,
+      "Expected email-phone-pii to still match phone preceded by space/non-hex prose",
+    );
+  });
+});
+
+// ─── Helpers ───────────────────────────────────────────────────────────────────────────────
 
 function truncate(str, maxLen) {
   if (typeof str !== "string") return String(str);

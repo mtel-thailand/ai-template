@@ -18,7 +18,7 @@
  *
  * CI wiring: owned by ticket #28. This script is the SR6 enforcement point;
  * the CI job that invokes it will be added in #28 (docs-check.yml or a new
- * memory-lint.yml). See https://github.com/mtel-thailand/ai-template/issues/28
+ * memory-lint.yml). See Issue #28 in the canonical repo (GITHUB_REPO_URL).
  *
  * TODO(#28): Wire this into CI. The shared secrets-regex module is owned by
  * ticket #33; once #33 lands, replace the inlined regex set below with

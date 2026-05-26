@@ -61,13 +61,13 @@ on every request — don't rely on the client sending a correct `userId`.
 #### A3: Injection (XSS)
 ```typescript
 // UNSAFE — XSS via localStorage
-const raw = localStorage.getItem('ai-todo-todos');
+const raw = localStorage.getItem('app-tasks');
 const todos = JSON.parse(raw || '[]'); // trust nothing
 
 // SAFE
 function loadTodos(): Todo[] {
   try {
-    const raw = localStorage.getItem('ai-todo-todos');
+    const raw = localStorage.getItem('app-tasks');
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];

@@ -55,7 +55,7 @@ All runbooks live in `/docs/runbooks/` with names matching the feature or compon
 - Console error: "Unexpected token in JSON at position..."
 
 ### Diagnosis Steps
-1. Open DevTools → Application → Local Storage → `ai-todo-todos`
+1. Open DevTools → Application → Local Storage → `app-tasks`
 2. Check if the value is valid JSON (use JSON.parse in console)
 3. If parse fails: corrupt data — proceed to rollback
 4. If parse succeeds: check `version` field — if missing, old format
@@ -63,7 +63,7 @@ All runbooks live in `/docs/runbooks/` with names matching the feature or compon
 
 ### Rollback Procedure
 1. `git revert HEAD` on main for the offending commit
-2. Clear localStorage: `localStorage.removeItem('ai-todo-todos')` (user loses data — last resort)
+2. Clear localStorage: `localStorage.removeItem('app-tasks')` (user loses data — last resort)
 3. Deploy the revert
 4. Notify users of the data loss in the release notes
 

@@ -12,6 +12,8 @@
     "test:vitest:watch": "vitest",
     "type-check": "echo 'types ok'",
     "memory:gc": "node scripts/memory-gc.mjs",
+    "docs:consistency": "node scripts/docs-consistency.mjs",
+    "test:docs-consistency": "node --test scripts/docs-consistency.spec.mjs",
     "test:patterns": "node --test scripts/memory-secret-patterns.spec.mjs",
     "test:patterns:timing": "node --test scripts/memory-secret-patterns.timing.spec.mjs",
     "test:patterns:all": "node --test scripts/memory-secret-patterns.spec.mjs scripts/memory-secret-patterns.timing.spec.mjs",

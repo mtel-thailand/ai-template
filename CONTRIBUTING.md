@@ -15,6 +15,33 @@
 | DevOps | CI/CD, Docker, GitHub Pages |
 | AI | Agent config, opencode.json, skills, MCP, deep research |
 
+## Development tooling
+
+### Pre-commit hooks (lefthook)
+
+This repo uses [lefthook](https://github.com/evilmartians/lefthook) to run
+pre-commit checks. The configuration lives in `lefthook.yml` (top-level) and
+the shipped hook scripts in `.lefthook/scripts/`.
+
+**Install (optional but recommended):**
+
+```bash
+npm ci
+npx lefthook install
+```
+
+After installation, every `git commit` triggers the configured hooks.
+
+**What runs (per `lefthook.yml`):**
+
+- `memory-secret-scan` — scans staged files under `.opencode/memory/**`
+  against the shared secret/PII pattern module
+  (`scripts/memory-secret-patterns.mjs`) used by `npm run memory:lint`. Blocks
+  the commit on any match.
+
+**Bypass:** `git commit --no-verify` (emergency only — the CI
+`memory:lint` step enforces the same check on push).
+
 ## Workflow in 6 steps
 
 1. Open an issue (no issue = no code)

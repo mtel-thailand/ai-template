@@ -7,6 +7,9 @@ import { spawnSync } from 'node:child_process';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+
 import {
   stripJsonComments,
   parseOpencodeConfig,
@@ -19,6 +22,9 @@ import {
   compareRosters,
   compareRosterByName,
   compareBashTables,
+  checkOptInBanners,
+  MEMORY_BANNER_MARKER,
+  MEMORY_BANNER_FILES,
   runChecks,
 } from './docs-consistency.mjs';
 
@@ -220,6 +226,59 @@ test('compareBashTables: clean match returns no violations', () => {
   const oc = new Map([['@reviewer', policy]]);
   const arch = new Map([['@reviewer', policy]]);
   assert.deepEqual(compareBashTables(oc, arch), []);
+});
+
+// ── checkOptInBanners (ADR-0006) ──────────────────────────────────────────────
+function withTempRepo(setup, fn) {
+  const root = mkdtempSync(resolve(tmpdir(), 'docs-consistency-'));
+  try {
+    setup(root);
+    return fn(root);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+test('checkOptInBanners: all four required files present with marker → no violations', () => {
+  withTempRepo((root) => {
+    mkdirSync(resolve(root, 'docs/specs'), { recursive: true });
+    for (const rel of MEMORY_BANNER_FILES) {
+      writeFileSync(resolve(root, rel), `# stub\n\n${MEMORY_BANNER_MARKER} blah\n`);
+    }
+  }, (root) => {
+    assert.deepEqual(checkOptInBanners(root), []);
+  });
+});
+
+test('checkOptInBanners: missing marker in a file → violation names the file', () => {
+  withTempRepo((root) => {
+    mkdirSync(resolve(root, 'docs/specs'), { recursive: true });
+    for (const rel of MEMORY_BANNER_FILES) {
+      writeFileSync(resolve(root, rel), `# stub\n\n${MEMORY_BANNER_MARKER} blah\n`);
+    }
+    // Wipe the marker from one file.
+    writeFileSync(resolve(root, 'docs/index.md'), '# stub without marker\n');
+  }, (root) => {
+    const v = checkOptInBanners(root);
+    assert.equal(v.length, 1);
+    assert.match(v[0], /docs\/index\.md/);
+    assert.match(v[0], /missing/);
+  });
+});
+
+test('checkOptInBanners: missing file entirely → violation', () => {
+  withTempRepo((root) => {
+    mkdirSync(resolve(root, 'docs/specs'), { recursive: true });
+    for (const rel of MEMORY_BANNER_FILES) {
+      if (rel === 'README.md') continue;
+      writeFileSync(resolve(root, rel), `# stub\n\n${MEMORY_BANNER_MARKER} blah\n`);
+    }
+  }, (root) => {
+    const v = checkOptInBanners(root);
+    assert.equal(v.length, 1);
+    assert.match(v[0], /README\.md/);
+    assert.match(v[0], /required file missing/);
+  });
 });
 
 // ── End-to-end: real repo must pass ───────────────────────────────────────────

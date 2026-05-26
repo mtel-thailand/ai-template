@@ -116,6 +116,19 @@ the `skill` tool when a task matches a skill's description.
 
 ## Memory Subsystem
 
+> **Status: opt-in.** The memory subsystem is fully built and
+> security-controlled (SR1–SR6) but ships **disabled** in this OSS
+> release — the `memory:` block in `.opencode/opencode.json` is
+> commented out. Enabling triggers a network fetch of ONNX embedding
+> weights and loads the native `sqlite-vec` extension; you are
+> responsible for populating real SHAs in
+> `.opencode/memory/embeddings.lock` and
+> `.opencode/memory/sqlite-vec.lock` before enabling. See the
+> [enable-memory runbook](./runbooks/enable-memory.md) and
+> [ADR-0006](./adr/0006-memory-opt-in-for-oss-release.md). Security
+> guards `memory:lint` (SR6) and `db-guard.yml` (SR1) remain active
+> regardless of the enable/disable state.
+
 The squad has a **shared, dual-backend memory vault** at `.opencode/memory/`
 that all agents read from and write to across sessions. This provides
 persistent context without runtime infrastructure.

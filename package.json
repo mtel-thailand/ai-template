@@ -18,6 +18,7 @@
     "test:patterns:timing": "node --test scripts/memory-secret-patterns.timing.spec.mjs",
     "test:patterns:all": "node --test scripts/memory-secret-patterns.spec.mjs scripts/memory-secret-patterns.timing.spec.mjs",
     "test:secret-scan": "node --test .lefthook/scripts/secret-scan.spec.mjs",
+    "test:memory-guard": "node --test scripts/memory-disabled-guard.spec.mjs",
     "memory:gc:validate": "node scripts/memory-gc.mjs --validate-only",
     "memory:gc:dry": "node scripts/memory-gc.mjs --dry-run",
     "memory:lint": "node scripts/memory-lint.mjs",

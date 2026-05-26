@@ -40,7 +40,7 @@ import { randomBytes } from "node:crypto";
 import matter from "gray-matter";
 import { z } from "zod";
 
-import { loadMemoryConfig, sqliteTiers, sqliteDbPaths } from "./_config.mjs";
+import { loadMemoryConfig, sqliteTiers, sqliteDbPaths, isMemoryEnabled } from "./_config.mjs";
 
 // ─── Schema (verbatim from spec §3) ────────────────────────────────────────
 
@@ -122,6 +122,14 @@ async function initBackends({ validateOnly }) {
   // Test-isolation: when MEMORY_ROOT points away from the project default,
   // skip SQLite entirely so tests never touch the developer's real memory.db.
   const isTestMode = process.env.MEMORY_ROOT && MEMORY_ROOT !== DEFAULT_MEMORY_ROOT;
+
+  // Per ADR-0006: the memory subsystem ships disabled in the OSS template
+  // release. Surface a clear one-line notice naming the runbook so the
+  // operator knows which mode they are in. File-vault GC continues to work
+  // regardless (CI's validate-memory job depends on this).
+  if (!isMemoryEnabled() && !isTestMode) {
+    console.log("memory subsystem disabled in opencode.json — running file-vault GC only (see docs/runbooks/enable-memory.md)");
+  }
 
   let config = null;
   try { config = loadMemoryConfig(); }

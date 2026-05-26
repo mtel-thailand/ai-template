@@ -158,6 +158,36 @@ export function parseArchitectureDiagramRoster(text) {
   return [...block.matchAll(ARCH_DIAGRAM_ROW_RE)].map(m => m[1].trim());
 }
 
+// ── Memory opt-in banner check (ADR-0006) ──────────────────────────────────────
+// The memory subsystem ships disabled in the OSS template release. ADR-0006
+// requires a "Status: opt-in" callout in README and the three primary docs
+// surfaces so users see the opt-in state before they discover the runtime
+// behavior. This check fails CI if any of those four files drops the marker.
+
+export const MEMORY_BANNER_MARKER = '**Status: opt-in.**';
+export const MEMORY_BANNER_FILES = [
+  'README.md',
+  'docs/index.md',
+  'docs/architecture.md',
+  'docs/specs/agent-memory.md',
+];
+
+export function checkOptInBanners(repoRoot) {
+  const violations = [];
+  for (const rel of MEMORY_BANNER_FILES) {
+    const p = resolve(repoRoot, rel);
+    if (!existsSync(p)) {
+      violations.push(`memory opt-in banner (ADR-0006): required file missing: ${rel}`);
+      continue;
+    }
+    const text = readFileSync(p, 'utf8');
+    if (!text.includes(MEMORY_BANNER_MARKER)) {
+      violations.push(`memory opt-in banner (ADR-0006): missing "${MEMORY_BANNER_MARKER}" marker in ${rel}`);
+    }
+  }
+  return violations;
+}
+
 // ── Comparators ────────────────────────────────────────────────────────────────
 function diff(setA, setB) {
   const onlyA = [...setA].filter(x => !setB.has(x)).sort();
@@ -262,6 +292,9 @@ export function runChecks(repoRoot) {
   } else {
     violations.push(...compareBashTables(opencode.perRoleBash, archBash));
   }
+
+  // Check 6: memory opt-in banner present in all required docs (ADR-0006)
+  violations.push(...checkOptInBanners(repoRoot));
 
   return { errors, violations };
 }

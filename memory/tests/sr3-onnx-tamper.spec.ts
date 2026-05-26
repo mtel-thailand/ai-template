@@ -23,11 +23,11 @@ import { createHash } from 'crypto';
 import {
   verifyEmbedderIntegrity,
   IntegrityVerificationError,
-} from '../../src/memory/integrity-verifier.js';
+} from '../src/integrity-verifier.js';
 import {
   TransformersJsEmbedder,
   EmbedderIntegrityError,
-} from '../../src/memory/transformers-embedder.js';
+} from '../src/transformers-embedder.js';
 
 // ---------------------------------------------------------------------------
 // Helpers

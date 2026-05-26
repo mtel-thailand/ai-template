@@ -7,7 +7,7 @@
  * sqlite-vec for use by memory-{gc,export,import}.mjs scripts.
  *
  * This is NOT a full implementation of the MemoryBackend interface from
- * src/memory/backend.ts — it is a simplified adapter that implements only
+ * memory/src/backend.ts — it is a simplified adapter that implements only
  * the operations needed by the GC, export, and import scripts:
  *   initDB()      → open/init a SQLite DB with DDL + pragmas
  *   listEntries() → list entries, optionally filtered by tier
@@ -34,7 +34,7 @@
 import Database from "better-sqlite3";
 import sqliteVec from "sqlite-vec";
 
-// ─── DDL (canonical — copy of src/memory/schema.sql) ────────────────────────
+// ─── DDL (canonical — copy of memory/src/schema.sql) ────────────────────────
 
 const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS entries (

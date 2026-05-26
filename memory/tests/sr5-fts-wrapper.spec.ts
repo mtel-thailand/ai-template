@@ -22,7 +22,7 @@ import {
   withFtsTimeout,
   FtsGrammarError,
   FtsTimeoutError,
-} from '../../src/memory/fts-wrapper.js';
+} from '../src/fts-wrapper.js';
 
 describe('SR5: default phrase-quoting mode', () => {
   it('wraps entire user input in double quotes', () => {

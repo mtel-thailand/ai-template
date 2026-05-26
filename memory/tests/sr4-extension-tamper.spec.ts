@@ -26,7 +26,7 @@ import {
   verifyExtensionIntegrity,
   detectPlatform,
   IntegrityVerificationError,
-} from '../../src/memory/integrity-verifier.js';
+} from '../src/integrity-verifier.js';
 
 // ---------------------------------------------------------------------------
 // Helpers

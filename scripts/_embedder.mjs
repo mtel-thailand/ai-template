@@ -4,7 +4,7 @@
  * _embedder.mjs — Standalone embedder factory for memory scripts
  *
  * Wraps @xenova/transformers for use by memory-{gc,import}.mjs scripts.
- * Mirrors the Embedder interface in src/memory/embedder.ts but is a
+ * Mirrors the Embedder interface in memory/src/embedder.ts but is a
  * standalone .mjs adapter (the TypeScript embedder cannot be imported
  * directly from .mjs without a TS loader).
  *

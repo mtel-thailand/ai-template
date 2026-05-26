@@ -46,9 +46,10 @@ GitHub (Issues/PRs/Board)
 
 ### Per-role bash permission model
 
-Git and shell access are scoped per role to enforce least privilege. Only five
-agents (`@devops`, `@ai`, `@be`, `@fe`, `@tech-lead`) have any bash entitlement, and even
-they cannot push to remote — that requires explicit user authorization.
+Git and shell access are scoped per role to enforce least privilege. Six
+agents (`@devops`, `@ai`, `@be`, `@fe`, `@tech-lead`, `@reviewer`) have explicit
+per-role bash entitlement, and even they cannot push to remote — that requires
+explicit user authorization.
 
 **Scope summary:**
 
@@ -59,12 +60,21 @@ they cannot push to remote — that requires explicit user authorization.
 | `@be` | allow | allow | allow | **deny** | allow | none |
 | `@fe` | allow | allow | allow | **deny** | allow | none |
 | `@tech-lead` | allow | allow | allow | **deny** | none | none |
-| Others | none | none | none | none | none | none |
+| `@reviewer` | allow | allow | allow | **deny** | none | none |
+| Others | (fall-through to global deny) | — | — | — | — | — |
+
+Agents without an explicit per-agent `permission.bash` block — `@pm`, `@po`,
+`@qa`, `@security`, `@sre`, `@researcher` — fall through to the global
+`permission.bash` map in `opencode.json` (deny-by-default with `git push *`
+explicitly denied). The canonical encoding is
+`.opencode/opencode.json` (single source of truth); this table mirrors it
+and is enforced by `scripts/docs-consistency.mjs`.
 
 `git push *` is denied for every role. Pushes go through the GitHub API
-(`gh_*_push_files`) or manual user action. See
-ADR-0001 (`/docs/adr/0001-grant-git-access.md`) for the full matrix and design
-rationale.
+(`gh_*_push_files`) or manual user action with explicit authorization. See
+[ADR-0001](./adr/0001-grant-git-access.md) for the full matrix and design
+rationale, and [ADR-0008](./adr/0008-canonical-roster-source-of-truth.md) for
+the source-of-truth decision behind this table.
 
 ### Design Gate — three tiers
 

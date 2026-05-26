@@ -137,7 +137,26 @@
     },
     "reviewer": {
       "model": "anthropic/claude-opus-4-7",
-      "temperature": 0.1
+      "temperature": 0.1,
+      "permission": {
+        "bash": {
+          "git status": "allow",
+          "git diff *": "allow",
+          "git add *": "allow",
+          "git commit *": "allow",
+          "git log *": "allow",
+          "git branch *": "allow",
+          "git checkout *": "allow",
+          "git fetch *": "allow",
+          "git rebase *": "allow",
+          "git stash *": "allow",
+          "git push *": "deny",
+          "git push --force *": "deny",
+          "git remote add *": "deny",
+          "git config --global *": "deny",
+          "*": "deny"
+        }
+      }
     },
     "qa": {
       "model": "anthropic/claude-opus-4-7",

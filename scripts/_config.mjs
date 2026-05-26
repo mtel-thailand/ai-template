@@ -161,6 +161,91 @@ export function loadMemoryConfig(rootDir) {
   return merged;
 }
 
+// ─── Memory-enabled detection (ADR-0006) ─────────────────────────────────────
+
+/**
+ * Strip `//` line comments outside string literals.  Mirrors the stripper in
+ * `docs-consistency.mjs` — kept local so `_config.mjs` stays self-contained.
+ *
+ * @param {string} text
+ * @returns {string}
+ */
+export function stripJsonComments(text) {
+  let out = "";
+  let inString = false;
+  let escape = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inString) {
+      out += c;
+      if (escape) escape = false;
+      else if (c === "\\") escape = true;
+      else if (c === '"') inString = false;
+      continue;
+    }
+    if (c === '"') { inString = true; out += c; continue; }
+    if (c === "/" && text[i + 1] === "/") {
+      while (i < text.length && text[i] !== "\n") i++;
+      if (i < text.length) out += "\n";
+      continue;
+    }
+    out += c;
+  }
+  return out;
+}
+
+/**
+ * Return true iff the resolved opencode.json contains an uncommented
+ * top-level `memory` key.  Used to gate SQLite-tier memory operations
+ * (per ADR-0006 Option B: opt-in for OSS release).
+ *
+ * Returns false on any error: missing file, JSON parse failure, missing key.
+ * This is deliberately conservative — when in doubt, treat memory as
+ * disabled so callers fail-fast rather than running against an indeterminate
+ * configuration.
+ *
+ * @param {string} [rootDir]  Project root.  Defaults to `process.cwd()`.
+ * @returns {boolean}
+ */
+export function isMemoryEnabled(rootDir) {
+  const cwd = rootDir ?? process.cwd();
+  const configPath = process.env.OPENCODE_CONFIG
+    ? process.env.OPENCODE_CONFIG
+    : join(cwd, ".opencode", "opencode.json");
+
+  if (!existsSync(configPath)) return false;
+
+  let parsed;
+  try {
+    parsed = JSON.parse(stripJsonComments(readFileSync(configPath, "utf-8")));
+  } catch {
+    return false;
+  }
+  return parsed?.memory !== undefined && parsed?.memory !== null;
+}
+
+/**
+ * Guard helper for memory scripts that require the SQLite-tier backend.
+ * If memory is disabled, writes the canonical message to stderr and exits 1.
+ *
+ * Canonical message (per @qa refinement #3 on Issue #64, accepted by @po):
+ *
+ *   `<scriptName>: memory is disabled in opencode.json; see /docs/runbooks/enable-memory.md`
+ *
+ * @param {string} scriptName  Script name for the error prefix.
+ * @param {object} [opts]
+ * @param {string} [opts.rootDir]    Project root.  Defaults to process.cwd().
+ * @param {Function} [opts.exit]     Exit hook (defaults to process.exit) — testing seam.
+ * @param {Function} [opts.errorLog] Error log hook (defaults to console.error) — testing seam.
+ */
+export function requireMemoryEnabled(scriptName, opts = {}) {
+  if (isMemoryEnabled(opts.rootDir)) return;
+  const errorLog = opts.errorLog ?? console.error;
+  const exit = opts.exit ?? process.exit;
+  errorLog(`${scriptName}: memory is disabled in opencode.json; see /docs/runbooks/enable-memory.md`);
+  exit(1);
+}
+
 /**
  * Return an array of tiers whose backend type is `sqlite-vec`.
  */

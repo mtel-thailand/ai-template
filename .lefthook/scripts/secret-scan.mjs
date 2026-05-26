@@ -22,9 +22,10 @@
  */
 
 import { readFileSync, statSync } from "node:fs";
+import { extname } from "node:path";
 import { scan } from "../../scripts/memory-secret-patterns.mjs";
 
-// ─── Constants ───────────────────────────────────────────────────────────────
+// ─── Constants ──────────────────────────────────────────────────────────────────
 
 /** Files at or above this size (in bytes) are streamed in chunks rather than
  *  read entirely into memory. */
@@ -36,7 +37,32 @@ const BINARY_SAMPLE_BYTES = 4_096;
 /** Chunk size used when streaming large files. */
 const CHUNK_SIZE = 1_048_576; // 1 MiB
 
-// ─── Main ────────────────────────────────────────────────────────────────────
+/**
+ * File-extension allowlist of integrity-control artifacts that have their
+ * own SR3/SR4 hash-verification controls and are intentionally not subject
+ * to secret/PII scanning. See issue #72.
+ *
+ * Lock files contain only deterministic SHA-256 hashes and identifiers by
+ * design — scanning them produces only noise.
+ */
+const SKIP_EXTENSIONS = new Set([
+  ".lock", // *.lock — embeddings.lock (SR3), sqlite-vec.lock (SR4)
+]);
+
+/**
+ * Returns true if `filePath` should be skipped by the secret scan based on
+ * its file extension (integrity-control artifact allowlist).
+ *
+ * Exported for testing — see .lefthook/scripts/secret-scan.spec.mjs.
+ *
+ * @param {string} filePath
+ * @returns {boolean}
+ */
+export function shouldSkipPath(filePath) {
+  return SKIP_EXTENSIONS.has(extname(filePath));
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────────────────────
 
 async function main() {
   const files = process.argv.slice(2);
@@ -59,6 +85,11 @@ async function main() {
       continue;
     }
     if (stat.size === 0) continue;
+
+    // --- Skip integrity-control artifacts (#72) ---
+    // Lock files have their own SR3/SR4 hash-verification controls and
+    // contain only deterministic hashes, not secrets/PII.
+    if (shouldSkipPath(file)) continue;
 
     // --- Binary detection: sample start of file for null bytes ---
     if (isBinary(file)) continue;
@@ -91,7 +122,7 @@ async function main() {
   process.exit(exitCode);
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Helpers ───────────────────────────────────────────────────────────────────────────────
 
 /**
  * Check if the first bytes of a file contain a null byte (binary heuristic).
@@ -160,9 +191,14 @@ function scanFile(filePath, strict) {
   return results;
 }
 
-// ─── Execute ─────────────────────────────────────────────────────────────────
+// ─── Execute ───────────────────────────────────────────────────────────────────────────────
 
-main().catch((err) => {
-  console.error("[SECRET-SCAN] Internal error:", err);
-  process.exit(1);
-});
+// Only run main() when invoked as a script, not when imported by the spec.
+// import.meta.url is `file://...` and process.argv[1] is the resolved
+// script path; compare to avoid running on import.
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch((err) => {
+    console.error("[SECRET-SCAN] Internal error:", err);
+    process.exit(1);
+  });
+}

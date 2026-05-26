@@ -209,14 +209,30 @@ export const PATTERNS = Object.freeze([
     id: "email-phone-pii",
     severity: "block",
     category: "pii",
+    // Phone subpattern is guarded by hex-digit lookarounds
+    //   (?<![0-9A-Fa-f]) … (?![0-9A-Fa-f])
+    // so digit runs inside SHA-256 / hex hashes do not match (#72). Lock
+    // files (embeddings.lock, sqlite-vec.lock) are integrity-controlled
+    // via SR3/SR4 hash verification, not secret scanning. The email
+    // subpattern is unchanged.
     regex:
-      /[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}|\+?\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{4,9}/,
+      /[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}|(?<![0-9A-Fa-f])\+?\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{4,9}(?![0-9A-Fa-f])/,
     examples: {
       positive: ["user@example.com", "+1-555-123-4567"],
-      negative: ["user@localhost", "short"],
+      negative: [
+        "user@localhost",
+        "short",
+        // #72 regression — SHA-256 hex strings must not match. The
+        // lock-file format places these on lines like:
+        //   <sha256hex>  <filename>
+        "0000000000000000000000000000000000000000000000000000000000000000",
+        "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "0000000000000000000000000000000000000000000000000000000000000000  model.onnx",
+        "deadbeefcafebabe1234567890abcdef1234567890abcdef1234567890abcdef  darwin-arm64",
+      ],
     },
     description:
-      "Email address or phone number heuristic (PII)",
+      "Email address or phone number heuristic (PII). Phone subpattern is hex-digit-boundary-anchored to avoid SHA-256 false positives (#72).",
   },
 
   // ── block-strict severity (only active with strict=true) ─────────

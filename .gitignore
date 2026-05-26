@@ -16,12 +16,18 @@ dist-ssr
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
+**/.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Maintainer-OS fingerprint files (must not be committed)
+.DS_Store
+**/.DS_Store
+Thumbs.db
+**/Thumbs.db
 
 # Environment
 .env

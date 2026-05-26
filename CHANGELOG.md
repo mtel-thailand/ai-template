@@ -32,6 +32,10 @@ Versioning: [Semantic Versioning](https://semver.org/)
 - feat(agents): add `git-and-npm-hygiene` skill loaded by @devops, @ai, @be, @fe (#39)
 - docs(adr): ADR-0008 — canonical source of truth for squad roster and per-role bash policy (#61)
 - chore(scripts): `scripts/docs-consistency.mjs` — lint script that fails CI on drift between `opencode.json` / `pm.md` and the derived rosters in README / CONTRIBUTING / `docs/architecture.md` (#61)
+- docs(adr): ADR-0006 — memory subsystem ships **disabled** in the OSS template release (Option B); opt-in path via `/docs/runbooks/enable-memory.md`. T3 design gate cleared with sign-offs from PO, Tech Lead, Security, and QA on Issue #64. SR1–SR6 security controls remain active regardless of enable state. (#64)
+- docs(memory): "Status: opt-in" banner added to `README.md`, `docs/index.md`, `docs/architecture.md`, and `docs/specs/agent-memory.md` per ADR-0006; new runbook `docs/runbooks/enable-memory.md` with security checklist (AC-SEC-B1/B2/B3). (#64)
+- feat(scripts): `isMemoryEnabled()` / `requireMemoryEnabled()` helpers in `scripts/_config.mjs` + memory-disabled INFO log in `scripts/memory-gc.mjs` + `test:memory-guard` npm script (#64)
+- chore(scripts): `scripts/docs-consistency.mjs` Check 6 — fails CI if the memory opt-in banner marker is missing from any of the four required docs (#64)
 
 ### Changed
 - docs(consistency): README, CONTRIBUTING, SECURITY, `docs/architecture.md` reconciled against the canonical roster in `.opencode/agents/pm.md` and the per-role bash policy in `.opencode/opencode.json` (#61)

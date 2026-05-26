@@ -14,5 +14,13 @@ pre-commit:
     memory-secret-scan:
       tags: security
       glob: ".opencode/memory/**"
-      exclude: "memory.db*"
+      # #72: integrity-control artifacts (embeddings.lock, sqlite-vec.lock)
+      # have their own SR3/SR4 hash-verification controls and contain only
+      # deterministic hashes. Exclude them at the lefthook layer here, and
+      # also at the script layer (`shouldSkipPath` in secret-scan.mjs) as
+      # defense-in-depth. Single-quoted YAML strings avoid backslash escape
+      # interpretation so the regex source is preserved verbatim.
+      exclude:
+        - 'memory\.db.*'
+        - '.*\.lock$'
       run: node .lefthook/scripts/secret-scan.mjs {staged_files}

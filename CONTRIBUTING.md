@@ -2,18 +2,22 @@
 
 ## Who contributes what
 
+> **Canonical roster:** `.opencode/agents/pm.md` (single source of truth — see ADR-0008). This table mirrors the squad cheat sheet there.
+
 | Role | Contributes |
 |------|-------------|
 | PM | Sequencing, board management, gate enforcement |
 | PO | Ticket descriptions, acceptance criteria |
-| Tech Lead | Architecture decisions (ADRs in docs/architecture/) |
-| BE/FE | Implementation — only after design gate passes |
+| Tech Lead | Architecture decisions, ADRs in `docs/adr/` |
+| BE | Backend implementation — only after design gate passes |
+| FE | Frontend implementation + UX fidelity — only after design gate passes |
 | Reviewer | PR review, can approve Tier 1/2 autonomously |
-| QA | Test plans, acceptance tests |
+| QA | Test plans, acceptance tests, regression verification |
 | Security | Threat modeling, vulnerability scanning |
 | SRE | Reliability, performance, incident response |
 | DevOps | CI/CD, Docker, GitHub Pages |
-| AI | Agent config, opencode.json, skills, MCP, deep research |
+| Researcher | Deep research, Research Brief (read-only) |
+| AI | Agent config, `opencode.json`, skills, MCP integration |
 
 ## Development tooling
 

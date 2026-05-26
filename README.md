@@ -1,29 +1,32 @@
 # ai-template — opencode team template
 
-> A pre-wired multi-agent AI development squad template. Powered by opencode with 11 AI agent roles — GitHub is the work management layer (issues, board, PRs, Pages).
+> A pre-wired multi-agent AI development squad template. Powered by opencode with 12 AI agent roles — GitHub is the work management layer (issues, board, PRs, Pages).
 
 ## What this is
 
 - **Agent-infrastructure scaffold**, not an application
-- 11 AI agent roles: PM, PO, SA, UX, BE, FE, QA, SRE, DevOps, AI, Researcher
+- 12 AI agent roles: PM, PO, Tech Lead, BE, FE, Reviewer, QA, Security, SRE, DevOps, AI, Researcher
 - GitHub = work management: Issues → Design gate → PRs → Merge → Pages
 - Spec-driven, TDD, gitflow-disciplined development workflow
 
 ## Team roles at a glance
 
-| Agent | Owns |
-|---|---|
-| **PM** | Board, tickets, sequencing, gate & contract enforcement |
-| **PO** | Ticket desc, acceptance criteria, scope, MVP |
-| **SA** | Architecture, components, data, BE/FE split, ADRs |
-| **UX** | Flows, layout, states, accessibility (UI tickets) |
-| **BE** | Server-side implementation (TDD, spec-driven, gitflow) |
-| **FE** | Client-side implementation (TDD, spec-driven, gitflow) |
-| **QA** | Test plan, acceptance tests, verification, regression |
-| **SRE** | Security & reliability requirements, vuln scans, perf tests |
-| **DevOps** | Docker, CI/CD, GitHub Pages, releases, runbooks |
-| **AI** | Agent system, opencode config, skills, MCP integration |
-| **Researcher** | Deep research (web, codebase, libraries) — read-only |
+> **Canonical roster:** `.opencode/agents/pm.md` (Squad self-announcing block + Agent cheat sheet). All other docs derive from it — see ADR-0008.
+
+| Agent | Tag | When to use |
+|---|---|---|
+| **PM** | `@pm` | Board, sequencing, gate decisions |
+| **PO** | `@po` | Scope, acceptance criteria, prioritisation |
+| **Tech Lead** | `@tech-lead` | Architecture, ADRs, technical authority |
+| **BE** | `@be` | Backend implementation (after gate) |
+| **FE** | `@fe` | Frontend implementation + UX fidelity (after gate) |
+| **Reviewer** | `@reviewer` | Automated PR review (T1/T2 auto-approve) |
+| **QA** | `@qa` | Test plans, verification, regression |
+| **Security** | `@security` | Threat modelling, vulnerabilities, OWASP |
+| **SRE** | `@sre` | Reliability, performance, runbooks, incidents |
+| **DevOps** | `@devops` | CI/CD, Docker, deploy, Pages |
+| **Researcher** | `@researcher` | Deep research, Research Brief |
+| **AI** | `@ai` | Agent config, MCP, `opencode.json` — only when explicitly invoked |
 
 ## Prerequisites
 
@@ -44,16 +47,18 @@
 ```
 Issue (PO writes AC)
   ↓
-Design gate (SA + UX + QA + SRE sign off)
+Design gate (three-tier — T1: PM stamp / T2: PO + Tech Lead / T3: + Security + QA)
   ↓
-Branch (feature/<#>-<slug> from main)
+Branch (<type>/<#>-<slug> from main; type ∈ feature|fix|refactor|chore|docs|test)
   ↓
 Implement (BE/FE — TDD, spec-driven)
   ↓
-PR → Review → Green CI → Merge
+PR → Reviewer → Green CI → Merge (explicit user authorization)
   ↓
 Docs updated / Board moved / Issue closed
 ```
+
+See `.opencode/agents/_workflow.md` for the full universal contract and `docs/architecture.md` for the three-tier gate definition.
 
 ## What to replace before first use
 
@@ -64,9 +69,9 @@ Docs updated / Board moved / Issue closed
 ## Operational gotchas
 
 - **opencode config is NOT hot-reloaded** — after editing `opencode.json` or any agent file, quit and restart opencode.
-- **No root `package.json` exists** — CI will fail until you add one. See `ci.yml` for required scripts.
+- **`package.json` ships with placeholder scripts** (`lint: echo '0'`, `build: echo 'build ok'`). Replace with real implementations before adding application code; `npm ci` will still fail until `package-lock.json` is committed (see `docs/architecture.md` CI section).
 - **`docs/` exists** — contains template documentation. Replace with your project's documentation.
-- Agent permissions restrict bash: only `npm run *`, `npm test*`, `npx *`, `git *`, and a few other safe commands.
+- **Agent bash permissions are scoped per role** (least privilege). `git push *` is denied for every role — pushes require explicit user authorization. See the per-role matrix in `docs/architecture.md#per-role-bash-permission-model` and the design rationale in [ADR-0001](docs/adr/0001-grant-git-access.md).
 
 ## License
 

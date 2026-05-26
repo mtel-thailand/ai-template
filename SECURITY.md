@@ -16,5 +16,12 @@ Do not grant agents tools beyond their defined role scope.
 Full MCP tool list is in `.opencode/opencode.json`.
 
 ## Permissions
-Agent bash permissions are restricted to: `npm run *`, `npm test*`, `npx *`, `git *`.
-Do not expand these without a reviewed ADR.
+Agent bash access is **scoped per role** under the principle of least privilege. Headline rules:
+
+- `git push *` is **denied for every role** — remote writes require explicit user authorization.
+- `git push --force *`, `git remote add *`, and `git config --global *` are denied globally.
+- Only `@devops`, `@ai`, `@be`, `@fe`, `@tech-lead`, and `@reviewer` have any bash entitlement. Other roles (PM, PO, QA, Security, SRE, Researcher) have no bash access and fall through to the global deny-by-default.
+
+The full per-role matrix lives in [`docs/architecture.md#per-role-bash-permission-model`](docs/architecture.md#per-role-bash-permission-model) and the authoritative encoding is in `.opencode/opencode.json`. Design rationale and the policy decision are recorded in [ADR-0001](docs/adr/0001-grant-git-access.md).
+
+Do not expand these permissions without a new reviewed ADR.

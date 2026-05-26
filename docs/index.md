@@ -8,6 +8,15 @@ spec-driven, TDD, gitflow-disciplined AI development squad.
 > **No application source code lives here.** Use this template to start new
 > projects with the full squad already configured.
 
+> **Status: opt-in.** The memory subsystem is fully built and
+> security-controlled (SR1–SR6) but ships **disabled** in this OSS
+> release. Enabling triggers a network fetch of ONNX embedding weights
+> and loads the native `sqlite-vec` extension; you are responsible for
+> populating real SHAs in `.opencode/memory/embeddings.lock` and
+> `.opencode/memory/sqlite-vec.lock` before enabling. See the
+> [enable-memory runbook](runbooks/enable-memory.md) and
+> [ADR-0006](adr/0006-memory-opt-in-for-oss-release.md).
+
 ## Getting Started
 
 ```bash

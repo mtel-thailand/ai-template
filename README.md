@@ -2,6 +2,15 @@
 
 > A pre-wired multi-agent AI development squad template. Powered by opencode with 12 AI agent roles — GitHub is the work management layer (issues, board, PRs, Pages).
 
+> **Status: opt-in.** The memory subsystem is fully built and
+> security-controlled (SR1–SR6) but ships **disabled** in this OSS
+> release. Enabling triggers a network fetch of ONNX embedding weights
+> and loads the native `sqlite-vec` extension; you are responsible for
+> populating real SHAs in `.opencode/memory/embeddings.lock` and
+> `.opencode/memory/sqlite-vec.lock` before enabling. See the
+> [enable-memory runbook](docs/runbooks/enable-memory.md) and
+> [ADR-0006](docs/adr/0006-memory-opt-in-for-oss-release.md).
+
 ## What this is
 
 - **Agent-infrastructure scaffold**, not an application

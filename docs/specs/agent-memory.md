@@ -4,6 +4,18 @@
 > **Follow-up tickets:** GC script — #16; pre-commit secret-scrub hook — #33
 > **Canonical spec for:** `.opencode/memory/` layout, tier semantics, frontmatter schema, retrieval flow, eviction rules, and security policy.
 
+> **Status: opt-in.** The memory subsystem is fully built and
+> security-controlled (SR1–SR6) but ships **disabled** in this OSS
+> release — the `memory:` block in `.opencode/opencode.json` is
+> commented out per [ADR-0006](../adr/0006-memory-opt-in-for-oss-release.md).
+> Enabling triggers a network fetch of ONNX embedding weights
+> (`Xenova/all-MiniLM-L6-v2` via `@xenova/transformers`) and loads the
+> native `sqlite-vec` extension; you are responsible for populating real
+> SHAs in `.opencode/memory/embeddings.lock` and
+> `.opencode/memory/sqlite-vec.lock` before enabling. See the
+> [enable-memory runbook](../runbooks/enable-memory.md). This
+> specification describes the subsystem as it operates when enabled.
+
 ---
 
 ## 1. Storage Layout

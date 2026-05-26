@@ -35,7 +35,7 @@ Before running any git or npm action:
 2. Run `git branch --show-current` — confirm you are on the correct
    branch.
 3. Run `git remote -v` — confirm the remote is the expected upstream
-   (mtel-thailand/ai-template or the project's canonical remote).
+   (the canonical remote pinned in `.env` via `GITHUB_OWNER`/`GITHUB_REPO`).
 4. If anything is unexpected (detached HEAD, dirty tree, wrong remote,
    wrong branch), STOP and diagnose before proceeding.
 

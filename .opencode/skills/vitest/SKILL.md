@@ -212,7 +212,7 @@ describe('useTodos', () => {
       result.current.addTodo('Buy milk');
     });
 
-    const stored = JSON.parse(localStorage.getItem('ai-todo-todos')!);
+    const stored = JSON.parse(localStorage.getItem('app-tasks')!);
     expect(stored.todos).toHaveLength(1);
     expect(stored.version).toBe(1);
   });

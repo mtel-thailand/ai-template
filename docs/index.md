@@ -1,4 +1,4 @@
-# ai-todo
+# ai-template
 
 A **multi-agent AI coding template** — not a traditional application. This
 repository contains agent definitions, skill packs, platform configuration,

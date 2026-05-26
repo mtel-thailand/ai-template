@@ -7,47 +7,47 @@
     "docs/index.md",
     "docs/architecture.md"
   ],
-  "memory": {
-    "version": 1,
-    "backends": {
-      "short":       { "type": "file" },
-      "forgettable": { "type": "file" },
-      "mid":         { "type": "sqlite-vec", "path": ".opencode/memory/memory.db" },
-      "long":        { "type": "sqlite-vec", "path": ".opencode/memory/memory.db" },
-      "frequent":    { "type": "sqlite-vec", "path": ".opencode/memory/memory.db" }
-    },
-    "embedder": {
-      "kind": "transformers-js",
-      "model": "Xenova/all-MiniLM-L6-v2",
-      "dim": 384,
-      "quantization": "fp32",
-      "lockfile": ".opencode/memory/embeddings.lock"
-    },
-    "sqlite": {
-      "extensionPath": "bin/sqlite-vec",
-      "extensionLockfile": ".opencode/memory/sqlite-vec.lock",
-      "pragmas": {
-        "journal_mode": "WAL",
-        "synchronous":  "NORMAL",
-        "busy_timeout": 5000,
-        "foreign_keys": "ON",
-        "temp_store":   "MEMORY"
-      }
-    },
-    "search": {
-      "hybridWeights": { "vector": 0.7, "lexical": 0.3 },
-      "ftsTimeoutMs": 500,
-      "annTrigger": {
-        "corpusSize":   5000,
-        "searchP99Ms":  500,
-        "recallAt5":    0.85
-      }
-    },
-    "exports": {
-      "path": ".opencode/memory/exports",
-      "excludeFields": ["embedding"]
-    }
-  },
+  // "memory": {
+  //   "version": 1,
+  //   "backends": {
+  //     "short":       { "type": "file" },
+  //     "forgettable": { "type": "file" },
+  //     "mid":         { "type": "sqlite-vec", "path": ".opencode/memory/memory.db" },
+  //     "long":        { "type": "sqlite-vec", "path": ".opencode/memory/memory.db" },
+  //     "frequent":    { "type": "sqlite-vec", "path": ".opencode/memory/memory.db" }
+  //   },
+  //   "embedder": {
+  //     "kind": "transformers-js",
+  //     "model": "Xenova/all-MiniLM-L6-v2",
+  //     "dim": 384,
+  //     "quantization": "fp32",
+  //     "lockfile": ".opencode/memory/embeddings.lock"
+  //   },
+  //   "sqlite": {
+  //     "extensionPath": "bin/sqlite-vec",
+  //     "extensionLockfile": ".opencode/memory/sqlite-vec.lock",
+  //     "pragmas": {
+  //       "journal_mode": "WAL",
+  //       "synchronous":  "NORMAL",
+  //       "busy_timeout": 5000,
+  //       "foreign_keys": "ON",
+  //       "temp_store":   "MEMORY"
+  //     }
+  //   },
+  //   "search": {
+  //     "hybridWeights": { "vector": 0.7, "lexical": 0.3 },
+  //     "ftsTimeoutMs": 500,
+  //     "annTrigger": {
+  //       "corpusSize":   5000,
+  //       "searchP99Ms":  500,
+  //       "recallAt5":    0.85
+  //     }
+  //   },
+  //   "exports": {
+  //     "path": ".opencode/memory/exports",
+  //     "excludeFields": ["embedding"]
+  //   }
+  // },
   "skills": {
     "paths": [".opencode/skills"]
   },

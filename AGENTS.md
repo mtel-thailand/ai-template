@@ -119,17 +119,24 @@ agent-infrastructure questions to **AI** (`@ai`), not BE/FE.
 
 ## Canonical repo identity
 
-The canonical owner/repo for this project is **`mtel-thailand/ai-template`**.
-Agents must use these values for every GitHub MCP tool call (`gh_*_issue_read`,
-`gh_*_push_files`, etc.) — do not guess from `git remote`, the user's email,
-or prior session context. They are pinned in `.env` as:
+Agents must use the canonical owner/repo for every GitHub MCP tool call
+(`gh_*_issue_read`, `gh_*_push_files`, etc.) — do not guess from the user's
+email or prior session context.
 
-- `GITHUB_OWNER=mtel-thailand`
-- `GITHUB_REPO=ai-template`
-- `GITHUB_REPO_URL=https://github.com/mtel-thailand/ai-template`
+**Resolution chain (load-bearing — agents must follow this exact order):**
 
-If `.env` is missing these, fall back to `.git/config` `remote.origin.url`,
-not to guessing.
+1. Read `GITHUB_OWNER`, `GITHUB_REPO`, and `GITHUB_REPO_URL` from `.env`.
+2. If `.env` is missing those values, fall back to parsing `.git/config`
+   `remote.origin.url`.
+3. If neither is available, fail loudly and ask the user — never guess.
+
+`.env.example` ships with placeholders (`<your-org>`, `<your-repo>`). A fresh
+clone of this template will not run agent tooling until `.env` is created
+with real values. See
+[`/docs/adr/0007-single-shared-github-pat.md`](docs/adr/0007-single-shared-github-pat.md)
+for the single-shared-`GITHUB_PAT` decision that pairs with these settings,
+and [`/docs/audits/sanitization-checklist.md`](docs/audits/sanitization-checklist.md)
+for the OSS-publication audit record.
 
 ## Operational gotchas
 

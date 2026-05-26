@@ -121,7 +121,7 @@ test.beforeEach(async ({ page }) => {
 
   // 3. (Optional) Seed specific test data via localStorage
   // await page.evaluate((todos) => {
-  //   localStorage.setItem('ai-todo-todos', JSON.stringify(todos));
+  //   localStorage.setItem('app-tasks', JSON.stringify(seedData));
   // }, seedData);
   // await page.reload();
 });

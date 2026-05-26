@@ -32,7 +32,7 @@ The project documentation lives as markdown in `/docs` and is published as a Git
 
 - GitHub Pages automatically builds from the `/docs` folder when it contains an `index.md`
 - No Jekyll build step needed (GitHub Pages natively renders markdown)
-- Site URL: `https://mtel-thailand.github.io/ai-todo/`
+- Site URL: `https://<your-org>.github.io/<your-repo>/`
 
 ## Maintenance
 
@@ -61,4 +61,4 @@ The project documentation lives as markdown in `/docs` and is published as a Git
 - [ ] `/docs/index.md` exists — the site has a landing page
 - [ ] All links between docs pages use relative paths (`../other-page.md`)
 - [ ] Pages source is configured to `main` branch, `/docs` folder in Settings
-- [ ] The site renders correctly at `https://mtel-thailand.github.io/ai-todo/`
+- [ ] The site renders correctly at `https://<your-org>.github.io/<your-repo>/`

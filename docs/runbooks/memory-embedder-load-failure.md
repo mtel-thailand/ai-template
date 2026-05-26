@@ -10,6 +10,10 @@ Symptoms:
 - `memory:gc` warns: `Embedder unavailable; orphan-repair degrades to lexical-only…`
 - `memory:gc` warns: `embed failed for <name>: … — flagged for reindex`
 - Runtime: search results return `matchedBy: 'lexical'` only.
+- `memory:gc` / `memory:import` / `memory:export` throws
+  `IntegrityVerificationError` mentioning `SR3` on first run after model
+  download or after lockfile/binary divergence. The scripts-side embedder
+  now fail-closes on SHA mismatch (per #47, ADR-0003 SR3).
 
 ## What the system does automatically
 
@@ -25,6 +29,22 @@ failure. The degraded modes are:
 
 Orphan rows left after a degraded GC run are picked up by the next GC
 once the embedder is restored.
+
+**SR3 fail-closed (scripts-side, wired in #47).** When the cached ONNX
+file's SHA-256 does not match `embeddings.lock`, the embedder factory in
+`scripts/_embedder.mjs`:
+
+1. Drops the in-memory pipeline reference (no embedder weights stay
+   loaded — V8 reclaims them on the next GC pass).
+2. Best-effort `unlink`s the cached ONNX file so subsequent runs cannot
+   trust a stale cache. Operators do **not** need to clear the cache
+   manually.
+3. Throws `IntegrityVerificationError`. The factory never resolves, so
+   `embed()` is unreachable (C10 — no partial state on rejection).
+
+This is the same fail-closed contract as the runtime `TransformersJsEmbedder`
+(`src/memory/transformers-embedder.ts`), now extended to the scripts
+entry points.
 
 ## Causes (most common first)
 
@@ -46,10 +66,27 @@ once the embedder is restored.
 
 3. **`embeddings.lock` SHA-256 mismatch.** Per ADR-0003 SR3 the embedder
    fail-closes on first use if the model ONNX file SHA does not match
-   `embeddings.lock`.
+   `embeddings.lock`. Both the runtime embedder
+   (`src/memory/transformers-embedder.ts`) **and** the scripts-side
+   embedder (`scripts/_embedder.mjs`, wired in #47) enforce this — a
+   tampered or out-of-date ONNX file now also breaks `memory:gc`,
+   `memory:import`, and `memory:export`, not just app startup.
+
+   The script-side verifier additionally unlinks the cached ONNX file
+   best-effort on mismatch, so a corrupted download will be re-fetched
+   on the next run instead of repeatedly failing against stale bytes.
+
+   Error pattern:
+   ```
+   IntegrityVerificationError: SR3: embedder ONNX SHA-256 verification
+   failed: SHA-256 mismatch for <path>. Expected: <hex>, got: <hex>.
+   No cached weights retained; factory threw before any embed() call.
+   ```
 
    Fix: verify model file authenticity, then update `embeddings.lock`
-   via a reviewed PR (this is a privileged change).
+   via a reviewed PR (this is a privileged change). The reviewed PR is
+   the only legitimate path to update the lock — operators MUST NOT
+   silently edit the file to make the verifier pass.
 
 4. **Out-of-memory during model load.** ONNX Runtime CPU needs
    ~250–300 MB headroom for FP32, ~150 MB for q8.
@@ -81,6 +118,14 @@ If this runbook does not restore the embedder, file an SRE issue with:
 ## Related
 
 - ADR-0003 §Reliability "Embedder load failure"
-- ADR-0003 §Security requirements SR3 (embedding model pinning)
+- ADR-0003 §Security requirements SR3 (embedding model pinning), SR4
+  (sqlite-vec extension pinning — fail-closed on SHA mismatch with no
+  `.db`/`.db-wal`/`.db-shm` sidecar leak; see
+  `/docs/runbooks/memory-troubleshooting.md` for the SR4 failure path),
+  SR5 (FTS5 query timeout — soft timeout that bounds caller-visible
+  latency for awaited paths but cannot interrupt a synchronous SQLite
+  worker mid-statement; hard SQL-interrupt via `db.interrupt()` is a
+  separate hardening ticket)
 - `/docs/runbooks/memory-troubleshooting.md`
 - `/docs/runbooks/agent-memory.md`
+- Issue #47 — wires SR3 (scripts), SR4, SR5 into production paths

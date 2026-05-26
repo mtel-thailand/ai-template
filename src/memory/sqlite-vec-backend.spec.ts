@@ -65,9 +65,9 @@ describe('SqliteVecBackend', () => {
   let dbPath: string;
   let backend: SqliteVecBackend;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     dbPath = tempDbPath();
-    backend = new SqliteVecBackend(dbPath);
+    backend = await SqliteVecBackend.create(dbPath);
   });
 
   afterEach(() => {
@@ -307,7 +307,7 @@ describe('SqliteVecBackend', () => {
       };
 
       const localPath = tempDbPath();
-      const localBackend = new SqliteVecBackend(localPath, undefined, { embedder: mockEmbedder });
+      const localBackend = await SqliteVecBackend.create(localPath, { embedder: mockEmbedder });
 
       try {
         const entry = testEntry();

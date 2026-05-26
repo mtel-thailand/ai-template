@@ -2,10 +2,10 @@
  * sample-entries.ts — Test fixtures for memory backend tests.
  *
  * Provides pre-built entry objects matching the MemoryEntry interface
- * from src/memory/backend.ts.
+ * from memory/src/backend.ts.
  */
 
-import type { MemoryEntry } from '../../../src/memory/backend.js';
+import type { MemoryEntry } from '../../src/backend.js';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 

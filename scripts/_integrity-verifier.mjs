@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
 /**
- * _integrity-verifier.mjs — Scripts-side port of src/memory/integrity-verifier.ts
+ * _integrity-verifier.mjs — Scripts-side port of memory/src/integrity-verifier.ts
  *
  * The .mjs scripts (memory-{gc,export,import}.mjs and their embedder
  * factory) cannot import the .ts module at runtime without a TS loader,
  * so this file mirrors the canonical lock-file parser, SHA-256 file
  * hasher, and `verifyEmbedderIntegrity` helper. Keep it in sync with
- * `src/memory/integrity-verifier.ts`.
+ * `memory/src/integrity-verifier.ts`.
  *
  * Per ADR-0003 §"Security requirements" (SR3) and threat T-06:
  *   `embeddings.lock` holds SHA-256 of ONNX files. First-use verification

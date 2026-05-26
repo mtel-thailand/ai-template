@@ -19,7 +19,8 @@ permission:
     "accessibility": "allow"
     "security": "allow"
     "performance-optimization": "allow"
-  gh_reviewer*: allow
+tools:
+  gh_reviewer*: true
 ---
 
 ## Workflow contract
